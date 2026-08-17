@@ -1,0 +1,74 @@
+chapa_id,texto_canonico,numero_ocurrencias,numero_fuentes,source_ids,platforms,primera_fuente,recurrente
+CHAPA001,cachorro y dinosaurio,1,1,MEL001,youtube,MEL001,FALSE
+CHAPA002,cabeza de pote muñeque parcelana,1,1,MEL002,youtube,MEL002,FALSE
+CHAPA003,toledo joven,1,1,MEL002,youtube,MEL002,FALSE
+CHAPA004,el hombre lobo joven,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA005,la rica vicky mi bella perra isabel la católica,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA006,señor jackson de estripador,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA007,el conde moisés,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA008,chimpancé y han puesto pescado frustrado,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA009,coyote anciano,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA010,mi querida federal,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA011,mi querida momia con peluja,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA012,mi querido flajote de jorge chávez,1,1,MEL003,youtube,MEL003,FALSE
+CHAPA013,peinado de iguana,1,1,MEL004,youtube,MEL004,FALSE
+CHAPA014,pelo de choclo,1,1,MEL004,youtube,MEL004,FALSE
+CHAPA015,intestino gallo,1,1,MEL004,youtube,MEL004,FALSE
+CHAPA016,gato bailarín,2,2,MEL009; MEL013,tiktok; youtube,MEL009,TRUE
+CHAPA017,gordazo,1,1,MEL010,youtube,MEL010,FALSE
+CHAPA018,gordo,1,1,MEL010,youtube,MEL010,FALSE
+CHAPA019,monalisa de caja de ague,1,1,MEL011,tiktok,MEL011,FALSE
+CHAPA020,cara de murciélago,1,1,MEL011,tiktok,MEL011,FALSE
+CHAPA021,clark kane gay,1,1,MEL011,tiktok,MEL011,FALSE
+CHAPA022,barbie de la huerta perdida,2,2,MEL011; MEL012,tiktok,MEL011,TRUE
+CHAPA023,barrabás de ambiente,4,4,MEL011; MEL012; MEL018; MEL026,tiktok; youtube,MEL011,TRUE
+CHAPA024,mi querido pezón con orejas,1,1,MEL011,tiktok,MEL011,FALSE
+CHAPA025,serpiente cobra ciega,1,1,MEL012,tiktok,MEL012,FALSE
+CHAPA026,sirena del rio ucayali,2,2,MEL012; MEL017,tiktok,MEL012,TRUE
+CHAPA027,anchoveta china,1,1,MEL012,tiktok,MEL012,FALSE
+CHAPA028,miss universo de japón,1,1,MEL012,tiktok,MEL012,FALSE
+CHAPA029,barrbás ayacuchano,1,1,MEL014,tiktok,MEL014,FALSE
+CHAPA030,chirimoya blanca,1,1,MEL014,tiktok,MEL014,FALSE
+CHAPA031,clark kent de papas de junín,1,1,MEL014,tiktok,MEL014,FALSE
+CHAPA032,pezón con piernas,1,1,MEL014,tiktok,MEL014,FALSE
+CHAPA033,vaso con brazos,1,1,MEL015,tiktok,MEL015,FALSE
+CHAPA034,zapatilla con ojos,1,1,MEL015,tiktok,MEL015,FALSE
+CHAPA035,aborto de murciélago,1,1,MEL015,tiktok,MEL015,FALSE
+CHAPA036,pingüina gorda,3,3,MEL016; MEL020; MEL022,tiktok; youtube,MEL016,TRUE
+CHAPA037,senora lobo de mar gringa,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA038,garrapata cabra,2,2,MEL016; MEL022,tiktok; youtube,MEL016,TRUE
+CHAPA039,abuelita de katanas,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA040,panetón quemado,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA041,espantapájaro basurante,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA042,semilla de lenteja,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA043,espalda de espina de pejerrey,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA044,lagartija calma,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA045,miel de abuja,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA046,apache gringa,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA047,mi querido hiena cabra,1,1,MEL016,tiktok,MEL016,FALSE
+CHAPA048,gavilán gored,1,1,MEL017,tiktok,MEL017,FALSE
+CHAPA049,sonrisa de cebra,1,1,MEL017,tiktok,MEL017,FALSE
+CHAPA050,dracula flake,1,1,MEL017,tiktok,MEL017,FALSE
+CHAPA051,mi querido chino ayacuchano,1,1,MEL017,tiktok,MEL017,FALSE
+CHAPA052,ojo de caca de loro,2,2,MEL017; MEL019,tiktok,MEL017,TRUE
+CHAPA053,barbie de raja de ague,1,1,MEL019,tiktok,MEL019,FALSE
+CHAPA054,mi queried peinado de coyote,1,1,MEL019,tiktok,MEL019,FALSE
+CHAPA055,japanesa andina,1,1,MEL019,tiktok,MEL019,FALSE
+CHAPA056,mi querido jefe perro,1,1,MEL019,tiktok,MEL019,FALSE
+CHAPA057,mi queried melon diego,1,1,MEL019,tiktok,MEL019,FALSE
+CHAPA058,elefante de cotonou,2,2,MEL020; MEL022,youtube,MEL020,TRUE
+CHAPA059,chema ciento basura con permanente,1,1,MEL020,youtube,MEL020,FALSE
+CHAPA060,meteorito con lentes,2,2,MEL021; MEL022,youtube,MEL021,TRUE
+CHAPA061,rana cejona,1,1,MEL022,youtube,MEL022,FALSE
+CHAPA062,cabra vieja,1,1,MEL022,youtube,MEL022,FALSE
+CHAPA063,abuelita de satanás,1,1,MEL022,youtube,MEL022,FALSE
+CHAPA064,mamá del anticristo,1,1,MEL022,youtube,MEL022,FALSE
+CHAPA065,a cinde le dicen costal de papas,1,1,MEL023,youtube,MEL023,FALSE
+CHAPA066,a melcocha le dicen hormigabieja,1,1,MEL023,youtube,MEL023,FALSE
+CHAPA067,a cindy le dicen rocola,1,1,MEL023,youtube,MEL023,FALSE
+CHAPA068,a sidney le dicen pavo de navidad,1,1,MEL023,youtube,MEL023,FALSE
+CHAPA069,a melcochita le dicen jaula abandonada,1,1,MEL023,youtube,MEL023,FALSE
+CHAPA070,los gemelos un par de chupacabras,1,1,MEL025,youtube,MEL025,FALSE
+CHAPA071,perro viejo,1,1,MEL027,youtube,MEL027,FALSE
+CHAPA072,garrapata vieja,1,1,MEL027,youtube,MEL027,FALSE
+CHAPA073,don cochote,1,1,MEL027,youtube,MEL027,FALSE

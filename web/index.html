@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Melcochómetro</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="contenedor">
+    <h1>Melcochómetro</h1>
+    <p class="subtitulo">¿Qué chapa te pondría Melcochita?</p>
+
+    <!-- ===== FORMULARIO ===== -->
+    <form id="form-chapa" class="tarjeta" novalidate>
+      <label for="nombre_o_apodo">¿Cómo le dicen?</label>
+      <input
+        type="text" id="nombre_o_apodo" name="nombre_o_apodo"
+        placeholder="Ej. Eduardo, Chato, Gise" maxlength="40" required />
+
+      <label for="caracteristica">¿Qué lo/la hace inconfundible?</label>
+      <input
+        type="text" id="caracteristica" name="caracteristica"
+        placeholder="Ej. tiene el pelo parado, es altísimo, tiene una sonrisa enorme" maxlength="150" />
+
+      <label for="costumbre">¿Qué hace siempre?</label>
+      <input
+        type="text" id="costumbre" name="costumbre"
+        placeholder="Ej. llega tarde, habla muchísimo, baila en todas las fiestas" maxlength="150" />
+
+      <label for="objeto_que_siempre_usa">¿Qué nunca le falta?</label>
+      <input
+        type="text" id="objeto_que_siempre_usa" name="objeto_que_siempre_usa"
+        placeholder="Ej. lentes, celular, gorra, mochila" maxlength="80" />
+
+      <p class="nota-privacidad">No pongas datos privados. Con poquito nos basta.</p>
+
+      <p id="mensaje-validacion" class="mensaje-validacion oculto"></p>
+
+      <button type="submit" id="btn-generar">MELCOCHÉALO</button>
+    </form>
+
+    <!-- ===== CARGANDO ===== -->
+    <div id="estado-cargando" class="oculto">
+      <p>Melcocheando...</p>
+    </div>
+
+    <!-- ===== RESULTADO ===== -->
+    <div id="tarjeta-resultado" class="tarjeta oculto">
+      <p class="etiqueta-resultado">TE TOCÓ:</p>
+      <p id="texto-chapa" class="texto-chapa"></p>
+
+      <div class="fila-feedback">
+        <button id="btn-me-gusta" class="btn-feedback" aria-label="Me gusta">👍 ME GUSTA</button>
+        <button id="btn-no-me-gusta" class="btn-feedback" aria-label="No me gusta">👎 NO ME GUSTA</button>
+      </div>
+      <p id="mensaje-feedback" class="mensaje-feedback oculto">¡Gracias por tu voto!</p>
+
+      <button id="btn-otra-chapa" class="btn-secundario">OTRA CHAPA</button>
+      <button id="btn-melcochizar-otro" class="btn-secundario">MELCOCHIZAR A OTRO</button>
+    </div>
+
+    <!-- ===== ERROR ===== -->
+    <div id="tarjeta-error" class="tarjeta error oculto">
+      <p>Melcochita se quedó pensando. Prueba otra vez.</p>
+      <button id="btn-reintentar" class="btn-secundario">REINTENTAR</button>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

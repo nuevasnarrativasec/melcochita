@@ -1,0 +1,16 @@
+# Render Blueprint para el Melcochómetro (backend FastAPI + OpenAI).
+# Al conectar este repo en Render, este archivo configura el servicio web.
+# La OPENAI_API_KEY se carga como secreto en el dashboard (sync: false):
+# NUNCA se commitea al repositorio.
+services:
+  - type: web
+    name: melcochometro
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.9"
