@@ -1,4 +1,5 @@
-/* Melcochómetro — estilos funcionales mínimos (NO es el diseño final). */
+/* Melcochómetro — estilos funcionales (copy lúdico estilo Melcochita).
+   Sigue siendo un frontend de referencia, no el diseño final. */
 
 * {
   box-sizing: border-box;
@@ -21,16 +22,39 @@ body {
 
 h1 {
   text-align: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: #b3401f;
+  font-size: 2.1rem;
+  letter-spacing: 0.02em;
 }
 
 .subtitulo {
   text-align: center;
   color: #6b6255;
   font-size: 0.9rem;
+  font-style: italic;
   margin-top: 0;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+
+/* ---- Intro ---- */
+.intro {
+  text-align: center;
+  color: #4c453b;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  margin: 0 auto 22px;
+  max-width: 420px;
+}
+
+.intro p {
+  margin: 0 0 6px 0;
+}
+
+.intro-hook {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #b3401f;
 }
 
 .tarjeta {
@@ -40,13 +64,36 @@ h1 {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 18px;
+}
+
+/* ---- Pasos del formulario ---- */
+.paso {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paso-titulo {
+  margin: 0;
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #b3401f;
 }
 
 label {
   font-weight: 600;
-  font-size: 0.9rem;
-  margin-top: 8px;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.ayuda {
+  margin: 0 0 4px 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #8a8171;
 }
 
 input[type="text"] {
@@ -62,10 +109,25 @@ input[type="text"]:focus {
   border-color: #b3401f;
 }
 
+/* ---- Nota de privacidad ---- */
 .nota-privacidad {
-  font-size: 0.78rem;
-  color: #8a8171;
-  margin: 4px 0 0 0;
+  background: #faf6ef;
+  border: 1px dashed #e0d6c4;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  color: #6b6255;
+  line-height: 1.4;
+}
+
+.nota-privacidad p {
+  margin: 0;
+}
+
+.nota-privacidad-titulo {
+  font-weight: 700;
+  color: #4c453b;
+  margin-bottom: 2px !important;
 }
 
 .mensaje-validacion {
@@ -74,18 +136,18 @@ input[type="text"]:focus {
   background: #fdecea;
   border-radius: 6px;
   padding: 8px 10px;
-  margin: 4px 0 0 0;
+  margin: 0;
 }
 
 button {
-  margin-top: 16px;
+  margin-top: 4px;
   padding: 14px 16px;
   border: none;
   border-radius: 8px;
   background: #b3401f;
   color: white;
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   letter-spacing: 0.03em;
   cursor: pointer;
 }
@@ -103,20 +165,27 @@ button:disabled {
   background: #ffffff;
   color: #b3401f;
   border: 2px solid #b3401f;
+  font-size: 0.95rem;
 }
 
 .btn-secundario:hover:not(:disabled) {
   background: #fbeee9;
 }
 
+/* ---- Cargando ---- */
 #estado-cargando {
   text-align: center;
-  margin-top: 24px;
+  margin-top: 28px;
+}
+
+#texto-cargando {
+  margin: 0;
   font-size: 1.2rem;
   color: #b3401f;
   font-weight: 700;
 }
 
+/* ---- Resultado ---- */
 .etiqueta-resultado {
   margin: 0;
   font-size: 0.9rem;
@@ -131,10 +200,19 @@ button:disabled {
   font-size: 2rem;
   font-weight: 800;
   line-height: 1.2;
-  margin: 8px 0 8px 0;
+  margin: 8px 0 6px 0;
   color: #241d15;
   text-align: center;
   text-transform: uppercase;
+}
+
+.remate {
+  margin: 0 0 6px 0;
+  text-align: center;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #b3401f;
+  font-weight: 600;
 }
 
 .fila-feedback {
@@ -150,8 +228,8 @@ button:disabled {
   background: #ffffff;
   color: #241d15;
   border: 1px solid #d8d2c4;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
 }
 
 .btn-feedback:hover:not(:disabled) {

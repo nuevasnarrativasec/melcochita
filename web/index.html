@@ -8,56 +8,81 @@
 </head>
 <body>
   <main class="contenedor">
-    <h1>Melcochómetro</h1>
-    <p class="subtitulo">¿Qué chapa te pondría Melcochita?</p>
+    <h1>MELCOCHÓMETRO</h1>
+    <p class="subtitulo">Para usar y vacilar</p>
+
+    <div class="intro">
+      <p class="intro-hook">Tu momento ha llegado.</p>
+      <p>Todos tenemos un pata que se merece su chapa. Danos unas pistas y Melcochita se encarga del resto.</p>
+    </div>
 
     <!-- ===== FORMULARIO ===== -->
     <form id="form-chapa" class="tarjeta" novalidate>
-      <label for="nombre_o_apodo">¿Cómo le dicen?</label>
-      <input
-        type="text" id="nombre_o_apodo" name="nombre_o_apodo"
-        placeholder="Ej. Eduardo, Chato, Gise" maxlength="40" required />
+      <div class="paso">
+        <p class="paso-titulo">1. Escoge a tu víctima</p>
+        <label for="nombre_o_apodo">¿Cómo le dicen?</label>
+        <p class="ayuda">Tu pata, tu causa, tu compañero de desgracias.</p>
+        <input
+          type="text" id="nombre_o_apodo" name="nombre_o_apodo"
+          placeholder="Ej. Jorge, Chato, Pelao" maxlength="40" required />
+      </div>
 
-      <label for="caracteristica">¿Qué lo/la hace inconfundible?</label>
-      <input
-        type="text" id="caracteristica" name="caracteristica"
-        placeholder="Ej. tiene el pelo parado, es altísimo, tiene una sonrisa enorme" maxlength="150" />
+      <div class="paso">
+        <p class="paso-titulo">2. Míralo bien 👀</p>
+        <label for="caracteristica">¿Qué rasgo físico lo hace inconfundible?</label>
+        <p class="ayuda">Eso que ves y dices: este hombre vino así de fábrica.</p>
+        <input
+          type="text" id="caracteristica" name="caracteristica"
+          placeholder="Ej. pelo parado, narizota, altísimo, sonrisa enorme" maxlength="150" />
+      </div>
 
-      <label for="costumbre">¿Qué hace siempre?</label>
-      <input
-        type="text" id="costumbre" name="costumbre"
-        placeholder="Ej. llega tarde, habla muchísimo, baila en todas las fiestas" maxlength="150" />
+      <div class="paso">
+        <p class="paso-titulo">3. Ahora sí, échalo 😂</p>
+        <label for="costumbre">¿Qué hace siempre?</label>
+        <p class="ayuda">Esa costumbre que ya nadie le piensa corregir.</p>
+        <input
+          type="text" id="costumbre" name="costumbre"
+          placeholder="Ej. llega tarde, habla hasta por los codos, baila en todas" maxlength="150" />
+      </div>
 
-      <label for="objeto_que_siempre_usa">¿Qué nunca le falta?</label>
-      <input
-        type="text" id="objeto_que_siempre_usa" name="objeto_que_siempre_usa"
-        placeholder="Ej. lentes, celular, gorra, mochila" maxlength="80" />
+      <div class="paso">
+        <p class="paso-titulo">4. Para rematar...</p>
+        <label for="objeto_que_siempre_usa">¿Qué nunca le falta?</label>
+        <p class="ayuda">Hay gente que sin esto no sale ni a la esquina.</p>
+        <input
+          type="text" id="objeto_que_siempre_usa" name="objeto_que_siempre_usa"
+          placeholder="Ej. lentes, gorra, celular, mochila" maxlength="80" />
+      </div>
 
-      <p class="nota-privacidad">No pongas datos privados. Con poquito nos basta.</p>
+      <div class="nota-privacidad">
+        <p class="nota-privacidad-titulo">Oe, con cariño. ❤️</p>
+        <p>Nada de apellidos, teléfonos ni datos privados. Con poquito basta para destruir una reputación.</p>
+      </div>
 
       <p id="mensaje-validacion" class="mensaje-validacion oculto"></p>
 
-      <button type="submit" id="btn-generar">MELCOCHÉALO</button>
+      <button type="submit" id="btn-generar">¡MELCOCHÉALO!</button>
     </form>
 
     <!-- ===== CARGANDO ===== -->
     <div id="estado-cargando" class="oculto">
-      <p>Melcocheando...</p>
+      <p id="texto-cargando">Analizando a la víctima...</p>
     </div>
 
     <!-- ===== RESULTADO ===== -->
     <div id="tarjeta-resultado" class="tarjeta oculto">
-      <p class="etiqueta-resultado">TE TOCÓ:</p>
+      <p class="etiqueta-resultado">Melcochita ha hablado</p>
       <p id="texto-chapa" class="texto-chapa"></p>
+      <p class="remate">¡No te piques, imbécil! 😂</p>
 
       <div class="fila-feedback">
-        <button id="btn-me-gusta" class="btn-feedback" aria-label="Me gusta">👍 ME GUSTA</button>
-        <button id="btn-no-me-gusta" class="btn-feedback" aria-label="No me gusta">👎 NO ME GUSTA</button>
+        <button id="btn-me-gusta" class="btn-feedback" aria-label="Me gusta">👍 JAJA, ES ÉL/ELLA</button>
+        <button id="btn-no-me-gusta" class="btn-feedback" aria-label="No me gusta">👎 NAH, OTRA</button>
       </div>
-      <p id="mensaje-feedback" class="mensaje-feedback oculto">¡Gracias por tu voto!</p>
+      <p id="mensaje-feedback" class="mensaje-feedback oculto">¡Anotado! Gracias por el dato.</p>
 
       <button id="btn-otra-chapa" class="btn-secundario">OTRA CHAPA</button>
-      <button id="btn-melcochizar-otro" class="btn-secundario">MELCOCHIZAR A OTRO</button>
+      <button id="btn-melcochizar-otro" class="btn-secundario">Melcochizar a otra víctima</button>
     </div>
 
     <!-- ===== ERROR ===== -->

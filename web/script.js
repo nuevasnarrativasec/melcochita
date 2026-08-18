@@ -9,6 +9,7 @@ const btnGenerar = document.getElementById("btn-generar");
 const mensajeValidacion = document.getElementById("mensaje-validacion");
 
 const estadoCargando = document.getElementById("estado-cargando");
+const textoCargando = document.getElementById("texto-cargando");
 const tarjetaResultado = document.getElementById("tarjeta-resultado");
 const tarjetaError = document.getElementById("tarjeta-error");
 const textoChapa = document.getElementById("texto-chapa");
@@ -23,6 +24,34 @@ const mensajeFeedback = document.getElementById("mensaje-feedback");
 
 let ultimosDatos = null;
 let enVuelo = false;
+
+// --- Mensajes de carga (progresión lúdica mientras Melcochita "piensa") ---
+const MENSAJES_CARGA = [
+  "Analizando a la víctima...",
+  "Uy, ya le encontré algo...",
+  "A ver esa cara...",
+  "Esto se está poniendo feo...",
+];
+const MENSAJE_REVELACION = "Ya salió, ¡imbécil!";
+let _cargaTimer = null;
+
+function detenerMensajesCarga() {
+  if (_cargaTimer) {
+    clearInterval(_cargaTimer);
+    _cargaTimer = null;
+  }
+}
+
+function iniciarMensajesCarga() {
+  detenerMensajesCarga();
+  let i = 0;
+  textoCargando.textContent = MENSAJES_CARGA[0];
+  // Avanza por los mensajes y se queda en el último mientras siga cargando.
+  _cargaTimer = setInterval(() => {
+    i = Math.min(i + 1, MENSAJES_CARGA.length - 1);
+    textoCargando.textContent = MENSAJES_CARGA[i];
+  }, 1200);
+}
 
 function mostrarSolo(el) {
   [form, estadoCargando, tarjetaResultado, tarjetaError].forEach((e) => e.classList.add("oculto"));
@@ -53,7 +82,7 @@ function validar(datos) {
   const otros = [datos.caracteristica, datos.costumbre, datos.objeto_que_siempre_usa];
   const completados = otros.filter((v) => v.length > 0).length;
   if (completados < 2) {
-    return "Completa al menos 2 de los otros 3 datos (característica, costumbre u objeto).";
+    return "Completa al menos 2 de los otros 3 datos (rasgo físico, costumbre u objeto).";
   }
   return null;
 }
@@ -62,6 +91,7 @@ async function solicitarChapa(datos, origen) {
   if (enVuelo) return;
   enVuelo = true;
   mostrarSolo(estadoCargando);
+  iniciarMensajesCarga();
 
   try {
     const respuesta = await fetch("/generar", {
@@ -75,11 +105,18 @@ async function solicitarChapa(datos, origen) {
     }
 
     const data = await respuesta.json();
+
+    // Remate de la carga antes de revelar la chapa.
+    detenerMensajesCarga();
+    textoCargando.textContent = MENSAJE_REVELACION;
+    await new Promise((r) => setTimeout(r, 700));
+
     textoChapa.textContent = data.chapa;
     reiniciarFeedbackUI();
     mostrarSolo(tarjetaResultado);
   } catch (err) {
     // Nunca se muestra el detalle técnico al usuario.
+    detenerMensajesCarga();
     mostrarSolo(tarjetaError);
   } finally {
     enVuelo = false;
@@ -119,7 +156,7 @@ form.addEventListener("submit", (e) => {
   btnGenerar.textContent = "MELCOCHEANDO...";
   solicitarChapa(ultimosDatos, "primera").finally(() => {
     btnGenerar.disabled = false;
-    btnGenerar.textContent = "MELCOCHÉALO";
+    btnGenerar.textContent = "¡MELCOCHÉALO!";
   });
 });
 
