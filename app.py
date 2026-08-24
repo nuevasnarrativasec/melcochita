@@ -139,11 +139,19 @@ def _prioridad(c):
     )
 
 
+# La web muestra UNA sola chapa, así que no necesita el TOP 5 del motor.
+# Con objetivo=2 el motor corta apenas tiene 2 candidatos sobre el umbral
+# (deja un pequeño margen para exigir además conexion_con_input>=3), y la
+# ronda 1 casi siempre basta: 2 llamadas en vez de 4-8.
+OBJETIVO_CANDIDATOS_WEB = 2
+
+
 def _generar_resultado(solicitud):
     return gc.generar_para_perfil(
         _client, _repertorio, _textos_corpus_gold,
         solicitud.nombre_o_apodo, solicitud.caracteristica,
         solicitud.costumbre, solicitud.objeto_que_siempre_usa,
+        objetivo_candidatos=OBJETIVO_CANDIDATOS_WEB,
     )
 
 
@@ -177,19 +185,14 @@ def _elegir_ganador(resultados):
 @app.post("/generar")
 def generar(solicitud: SolicitudChapa):
     try:
+        # UNA sola invocación al motor (que ya intenta hasta 2 rondas internas
+        # por su propio criterio). Antes, si ningún candidato alcanzaba
+        # conexion_con_input>=3 se rehacía TODA la generación — hasta duplicar
+        # las llamadas. Ahora, por latencia, se elige el mejor disponible:
+        # _elegir_ganador ya cae con elegancia al mejor que cumple el umbral
+        # (marcando bajo_umbral_conexion=True para el log) en vez de regenerar.
         resultados = [_generar_resultado(solicitud)]
         ganador, bajo_umbral_conexion = _elegir_ganador(resultados)
-
-        # "Si después de la primera ronda no existe candidato elegible,
-        # utiliza la segunda ronda ya implementada": generar_para_perfil
-        # ya intentó hasta 2 rondas internas por su propio criterio; si
-        # aun así ningún candidato cumple conexion_con_input>=3, se
-        # invoca una vez más (no se relaja el umbral, se busca más).
-        if bajo_umbral_conexion:
-            logger.warning("Ningún candidato cumplió conexion_con_input>=%s junto al umbral existente "
-                            "tras el primer intento; generando de nuevo.", UMBRAL_CONEXION_CON_INPUT_FINAL)
-            resultados.append(_generar_resultado(solicitud))
-            ganador, bajo_umbral_conexion = _elegir_ganador(resultados)
     except openai_module.OpenAIError as e:
         logger.error("Error de OpenAI: %s", e)
         raise HTTPException(status_code=502, detail="Error generando la chapa. Intenta de nuevo.")

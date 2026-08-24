@@ -88,9 +88,18 @@ OUTPUT_DIR = PROJECT_ROOT / "outputs" / "generaciones"
 # razonamiento (serie o / gpt-5 con reasoning effort) y deja el juez
 # barato — el juicio no necesita creatividad, sí consistencia.
 MODEL_GENERACION = "gpt-4o"
-MODEL_JUEZ = "gpt-4o"
+# El juez hace un trabajo MECÁNICO (puntuar contra una rúbrica), no creativo:
+# gpt-4o-mini es bastante más rápido y barato y la calidad de juicio aguanta.
+# La creatividad se queda en MODEL_GENERACION (gpt-4o).
+MODEL_JUEZ = "gpt-4o-mini"
 
-NUM_CANDIDATOS_POR_RONDA = 12
+# 8 en vez de 12: acorta tanto la generación como el juicio (menos tokens de
+# salida = menos latencia). Con el juez afinado y necesitando solo 1-2
+# ganadores para la web, 8 candidatos sobran.
+NUM_CANDIDATOS_POR_RONDA = 8
+# Objetivo por defecto del CLI (para su análisis de TOP 5). La web pasa un
+# objetivo mucho menor (1-2): así la ronda 1 casi siempre basta y no se
+# encadena una segunda ronda solo para rankear finalistas que nadie ve.
 NUM_RESULTADOS = 5
 MAX_RONDAS = 2
 
@@ -125,6 +134,22 @@ EJEMPLOS_CALIBRACION_CORPUS = [
     "Barbie de la Huerta Perdida", "ojo de caca de loro", "sirena del río Ucayali",
     "pezón con piernas", "espalda de espina de pejerrey", "barrabás de ambiente",
     "meteorito con lentes",
+]
+
+# Set AMPLIADO de ejemplos Gold reales SOLO para el JUEZ: cuantos más
+# ejemplos del listón vea el evaluador, mejor distingue una buena chapa de
+# una mediocre. Como es texto de ENTRADA (no de salida), casi no agrega
+# latencia — es la mejora de precisión "gratis". Elegidos por ser vívidos,
+# variados en dominio (animal/comida/objeto/personaje/lugar/criatura) y
+# SIN atributos sensibles ni nacionalidad usada como burla.
+EJEMPLOS_CALIBRACION_JUEZ = [
+    "Barbie de la Huerta Perdida", "ojo de caca de loro", "sirena del río Ucayali",
+    "pezón con piernas", "espalda de espina de pejerrey", "barrabás de ambiente",
+    "meteorito con lentes", "peinado de iguana", "pelo de choclo", "intestino gallo",
+    "cara de murciélago", "serpiente cobra ciega", "vaso con brazos", "zapatilla con ojos",
+    "abuelita de katanas", "panetón quemado", "espantapájaro basurante", "sonrisa de cebra",
+    "rana cejona", "lagartija calma", "costal de papas", "rocola", "pavo de navidad",
+    "don cochote", "chirimoya blanca",
 ]
 
 
@@ -308,7 +333,7 @@ no hacerlas quedar bien. Es normal y esperado que varias sean mediocres.
 
 EJEMPLOS REALES del Corpus Gold (el LISTÓN que deben alcanzar; una chapa buena está a esta \
 altura de sorpresa, especificidad y absurdo):
-{chr(10).join(f'  - "{e}"' for e in EJEMPLOS_CALIBRACION_CORPUS)}
+{chr(10).join(f'  - "{e}"' for e in EJEMPLOS_CALIBRACION_JUEZ)}
 
 EJEMPLOS QUE FALLAN por LITERALES/previsibles (si una chapa se parece a esto, castígala \
 fuerte en adn_melcocha y sorpresa_semantica):
@@ -502,12 +527,17 @@ def seleccionar_top5(candidatos_que_cumplen):
     )[:NUM_RESULTADOS]
 
 
-def generar_para_perfil(client, repertorio, textos_corpus_gold, nombre, caracteristica, costumbre, objeto, guardar_raw_en=None):
+def generar_para_perfil(client, repertorio, textos_corpus_gold, nombre, caracteristica, costumbre, objeto, guardar_raw_en=None, objetivo_candidatos=NUM_RESULTADOS):
     """
     Ejecuta hasta MAX_RONDAS. Cada ronda = LLAMADA 1 (genera chapas crudas
     con razonamiento) + LLAMADA 2 (el juez las puntúa en frío). No relaja
-    umbrales; hace una segunda ronda solo si no reúne NUM_RESULTADOS que los
-    superen. Contrato de retorno idéntico a v2.
+    umbrales; corta apenas reúne `objetivo_candidatos` que los superen.
+
+    `objetivo_candidatos` controla LATENCIA sin tocar los criterios: el CLI
+    usa el default (NUM_RESULTADOS=5) porque muestra un TOP 5; la web pasa
+    1-2, así la ronda 1 casi siempre basta y no se dispara una segunda ronda
+    solo para rankear finalistas que el usuario nunca ve. Contrato de retorno
+    idéntico a v2.
     """
     todos_candidatos = []
     raw_por_ronda = []
@@ -546,8 +576,8 @@ def generar_para_perfil(client, repertorio, textos_corpus_gold, nombre, caracter
 
         validos_seg, _ = filtrar_seguridad(todos_candidatos, textos_corpus_gold)
         que_cumplen = [c for c in validos_seg if cumple_umbral(c)]
-        if len(que_cumplen) >= NUM_RESULTADOS:
-            break  # no se necesita una ronda adicional
+        if len(que_cumplen) >= objetivo_candidatos:
+            break  # objetivo alcanzado: no se necesita una ronda adicional
 
     validos_seguridad, descartados_seguridad = filtrar_seguridad(todos_candidatos, textos_corpus_gold)
     que_cumplen_umbral = [c for c in validos_seguridad if cumple_umbral(c)]
