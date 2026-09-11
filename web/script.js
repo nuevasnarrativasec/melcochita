@@ -22,10 +22,16 @@ const btnMeGusta = document.getElementById("btn-me-gusta");
 const btnNoMeGusta = document.getElementById("btn-no-me-gusta");
 const mensajeFeedback = document.getElementById("mensaje-feedback");
 
+const btnEscuchar = document.getElementById("btn-escuchar");
+
 let ultimosDatos = null;
 let enVuelo = false;
+let _audioMelco = null; // último audio de la voz de Melcochita
 
 // --- Mensajes de carga (progresión lúdica mientras Melcochita "piensa") ---
+// Cada frase tiene su audio con la voz de Melcochita; el texto avanza a la
+// siguiente frase cuando termina su audio (quedándose en la última mientras
+// siga cargando). El orden de AUDIOS_CARGA calza con MENSAJES_CARGA.
 const MENSAJES_CARGA = [
   "Analizando a la víctima...",
   "Uy, ya le encontré algo...",
@@ -33,24 +39,71 @@ const MENSAJES_CARGA = [
   "Esto se está poniendo feo...",
 ];
 const MENSAJE_REVELACION = "Ya salió, ¡imbécil!";
-let _cargaTimer = null;
+
+const AUDIO_CARGA_DIR = "audio-carga"; // servido por app.py (ver README)
+const AUDIOS_CARGA = [
+  "analizando-a-la-victima.mp3",
+  "uy-ya-le-encontre-algo.mp3",
+  "a-ver-esa-cara.mp3",
+  "esto-se-esta-poniendo-feo.mp3",
+];
+const AUDIO_REVELACION_FILE = "ya-salio-imbecil.mp3";
+
+let _cargaTimer = null;   // fallback por tiempo si el audio no puede sonar
+let _audioCarga = null;   // audio de la frase de carga en curso
+let _cargando = false;
+
+function _detenerAudioCarga() {
+  if (_audioCarga) {
+    _audioCarga.onended = null;
+    try { _audioCarga.pause(); } catch (_) {}
+    _audioCarga = null;
+  }
+}
 
 function detenerMensajesCarga() {
+  _cargando = false;
   if (_cargaTimer) {
     clearInterval(_cargaTimer);
     _cargaTimer = null;
   }
+  _detenerAudioCarga();
 }
 
-function iniciarMensajesCarga() {
-  detenerMensajesCarga();
+// Fallback sin audio: cicla el texto por tiempo (comportamiento original).
+function _ciclarTextoPorTiempo() {
+  if (_cargaTimer) return;
   let i = 0;
   textoCargando.textContent = MENSAJES_CARGA[0];
-  // Avanza por los mensajes y se queda en el último mientras siga cargando.
   _cargaTimer = setInterval(() => {
     i = Math.min(i + 1, MENSAJES_CARGA.length - 1);
     textoCargando.textContent = MENSAJES_CARGA[i];
   }, 1200);
+}
+
+// Muestra la frase i con su audio; al terminar el audio avanza a la
+// siguiente. Si el navegador bloquea el audio, cae al ciclo por tiempo.
+function _reproducirFraseCarga(i) {
+  if (!_cargando) return;
+  textoCargando.textContent = MENSAJES_CARGA[i];
+  _detenerAudioCarga();
+  const a = new Audio(`${AUDIO_CARGA_DIR}/${AUDIOS_CARGA[i]}`);
+  _audioCarga = a;
+  a.onended = () => {
+    if (!_cargando) return;
+    if (i < MENSAJES_CARGA.length - 1) _reproducirFraseCarga(i + 1);
+    // en la última frase se queda en pantalla hasta la revelación
+  };
+  a.play().catch(() => {
+    _detenerAudioCarga();
+    _ciclarTextoPorTiempo();
+  });
+}
+
+function iniciarMensajesCarga() {
+  detenerMensajesCarga();
+  _cargando = true;
+  _reproducirFraseCarga(0);
 }
 
 function mostrarSolo(el) {
@@ -106,9 +159,21 @@ async function solicitarChapa(datos, origen) {
 
     const data = await respuesta.json();
 
-    // Remate de la carga antes de revelar la chapa.
+    // Remate de la carga: suena "¡Ya salió, imbécil!" con su audio y, al
+    // terminar ese audio, arranca la voz de la chapa (para que no se pisen).
     detenerMensajesCarga();
     textoCargando.textContent = MENSAJE_REVELACION;
+
+    let chapaDisparada = false;
+    const dispararChapa = () => {
+      if (chapaDisparada) return;
+      chapaDisparada = true;
+      reproducirVoz(data.chapa); // la voz de Melcochita, con su marco discursivo
+    };
+    const revelacion = new Audio(`${AUDIO_CARGA_DIR}/${AUDIO_REVELACION_FILE}`);
+    revelacion.onended = dispararChapa;
+    revelacion.play().catch(dispararChapa); // si no puede sonar, va directo la chapa
+
     await new Promise((r) => setTimeout(r, 700));
 
     textoChapa.textContent = data.chapa;
@@ -121,6 +186,36 @@ async function solicitarChapa(datos, origen) {
   } finally {
     enVuelo = false;
   }
+}
+
+// --- Voz de Melcochita ---
+// Pide a /voz el audio de la chapa (el backend le pone el marco "Mi
+// querido…") y lo reproduce. Es un plus: si algo falla, la chapa se ve
+// igual y no se rompe nada. En pantalla siempre se muestra la chapa
+// pelada; lo que suena es la versión enmarcada.
+async function reproducirVoz(texto) {
+  if (btnEscuchar) btnEscuchar.hidden = true;
+  try {
+    const r = await fetch("/voz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto }),
+    });
+    if (!r.ok) return; // sin audio (p.ej. voz no configurada): la chapa se ve igual
+    const blob = await r.blob();
+    if (_audioMelco) URL.revokeObjectURL(_audioMelco.src);
+    _audioMelco = new Audio(URL.createObjectURL(blob));
+    if (btnEscuchar) btnEscuchar.hidden = false;
+    _audioMelco.play().catch(() => {}); // si el navegador bloquea autoplay, queda el botón
+  } catch (err) {
+    /* el audio es opcional; nunca interrumpe la experiencia */
+  }
+}
+
+if (btnEscuchar) {
+  btnEscuchar.addEventListener("click", () => {
+    if (_audioMelco) _audioMelco.play();
+  });
 }
 
 async function enviarFeedback(valor) {
@@ -200,3 +295,21 @@ btnNoMeGusta.addEventListener("click", () => {
   mensajeFeedback.classList.remove("oculto");
   enviarFeedback("negativo");
 });
+
+// --- Auto-alto cuando el Melcochómetro va embebido en un iframe ---
+// Si la página corre dentro de un iframe (landing de El Comercio), le
+// avisa a la página contenedora su altura real para que el iframe crezca
+// o encoja según el estado (formulario / cargando / resultado), sin scroll
+// interno ni espacios vacíos. En uso normal (no embebido) no hace nada.
+if (window.parent && window.parent !== window) {
+  const _postAlto = () => {
+    const alto = Math.ceil(document.documentElement.scrollHeight);
+    window.parent.postMessage({ tipo: "melco-alto", alto: alto }, "*");
+  };
+  window.addEventListener("load", _postAlto);
+  if (window.ResizeObserver) {
+    new ResizeObserver(_postAlto).observe(document.body);
+  } else {
+    setInterval(_postAlto, 500); // fallback para navegadores viejos
+  }
+}

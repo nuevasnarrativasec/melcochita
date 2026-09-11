@@ -1,7 +1,12 @@
-# Render Blueprint para el Melcochómetro (backend FastAPI + OpenAI).
+# Render Blueprint para el Melcochómetro (backend FastAPI + OpenAI + ElevenLabs).
 # Al conectar este repo en Render, este archivo configura el servicio web.
-# La OPENAI_API_KEY se carga como secreto en el dashboard (sync: false):
-# NUNCA se commitea al repositorio.
+# Las keys se cargan como secreto en el dashboard (sync: false):
+# NUNCA se commitean al repositorio.
+#
+# PARA EL LANZAMIENTO: el plan "free" DUERME tras ~15 min de inactividad
+# (cold start de varios segundos) y tiene poca capacidad. Para un medio
+# masivo como El Comercio, sube a un plan pago que no duerma (p.ej.
+# "starter" o superior) cambiando la línea `plan:` de abajo.
 services:
   - type: web
     name: melcochometro
@@ -11,6 +16,21 @@ services:
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: OPENAI_API_KEY
-        sync: false
+        sync: false            # se pega en el dashboard, no en el repo
+      - key: ELEVENLABS_API_KEY
+        sync: false            # idem: secreto, se pega en el dashboard
+      - key: MELCOCHITA_VOICE_ID
+        value: nd89Nw4NE33rXRB5xGQe
+      - key: ELEVEN_MODEL_ID
+        value: eleven_flash_v2_5
+      - key: LIMITE_POR_IP_DIA
+        value: "40"
       - key: PYTHON_VERSION
         value: "3.11.9"
+    # OPCIONAL (recomendado para el lanzamiento): disco persistente para que
+    # la caché de audios (outputs/voz_cache) sobreviva a reinicios y no
+    # regenere créditos cada vez. Descomenta y ajusta el tamaño:
+    # disk:
+    #   name: melco-cache
+    #   mountPath: /opt/render/project/src/outputs
+    #   sizeGB: 1

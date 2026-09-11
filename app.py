@@ -24,8 +24,10 @@ Uso:
     .venv/bin/uvicorn app:app --reload
 """
 
+import datetime
 import json
 import logging
+import os
 import sys
 import threading
 from pathlib import Path
@@ -34,17 +36,59 @@ from typing import Literal
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 import generar_chapa as gc  # motor ya validado, NO se modifica
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response
 from pydantic import BaseModel
 from openai import OpenAI
 import openai as openai_module
+
+import voz  # módulo de voz de Melcochita; NO toca el motor
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("melcochometro")
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEB_DIR = PROJECT_ROOT / "web"
+
+# --------------------------------------------------------------------------
+# Límite por IP/día (salvaguarda de costo): evita que un pico viral vacíe
+# el saldo de ElevenLabs/OpenAI. En memoria y por proceso — es un tope
+# simple, no antifraude. Para varios workers o robustez fuerte, migrar a
+# Redis. Ajustable con la variable de entorno LIMITE_POR_IP_DIA.
+# NO cuenta contra el límite las repeticiones servidas desde caché ni los
+# errores; solo cada request efectivo a /generar y /voz.
+# --------------------------------------------------------------------------
+LIMITE_POR_IP_DIA = int(os.environ.get("LIMITE_POR_IP_DIA", "40"))
+_rate_lock = threading.Lock()
+_rate_data = {}  # {(bucket, ip, fecha_iso): conteo}
+
+
+def _ip_cliente(request: Request) -> str:
+    # Detrás de un proxy/CDN (infra de El Comercio), la IP real viene en
+    # X-Forwarded-For; si no, se usa la IP directa.
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "desconocido"
+
+
+def _chequear_limite(request: Request, bucket: str):
+    ip = _ip_cliente(request)
+    hoy = datetime.date.today().isoformat()
+    clave = (bucket, ip, hoy)
+    with _rate_lock:
+        # Purga barata de días viejos para que el dict no crezca sin fin.
+        if len(_rate_data) > 10000:
+            for k in [k for k in _rate_data if k[2] != hoy]:
+                del _rate_data[k]
+        n = _rate_data.get(clave, 0)
+        if n >= LIMITE_POR_IP_DIA:
+            raise HTTPException(
+                status_code=429,
+                detail="¡Ya melcochaste bastante por hoy! Vuelve mañana. 😄",
+            )
+        _rate_data[clave] = n + 1
 
 app = FastAPI(title="Melcochómetro MVP")
 
@@ -183,7 +227,8 @@ def _elegir_ganador(resultados):
 
 
 @app.post("/generar")
-def generar(solicitud: SolicitudChapa):
+def generar(solicitud: SolicitudChapa, request: Request):
+    _chequear_limite(request, "generar")
     try:
         # UNA sola invocación al motor (que ya intenta hasta 2 rondas internas
         # por su propio criterio). Antes, si ningún candidato alcanzaba
@@ -235,6 +280,38 @@ def feedback(solicitud: FeedbackSolicitud):
     _incrementar_metrica(clave)
     return {"ok": True}
 
+
+class SolicitudVoz(BaseModel):
+    # La chapa YA generada por /generar (texto pelado). El marco discursivo
+    # ("Mi querido…") lo agrega voz.py; el frontend sigue mostrando la
+    # chapa pelada. NO enviar aquí texto que no venga de /generar: la voz
+    # de Melcochita solo debe decir lo que pasó el filtro de seguridad.
+    texto: str
+
+
+@app.post("/voz")
+def generar_voz(solicitud: SolicitudVoz, request: Request):
+    _chequear_limite(request, "voz")
+    try:
+        audio = voz.sintetizar_chapa(solicitud.texto)
+    except voz.VozNoConfigurada:
+        # Falta configurar la key/voice_id: el frontend simplemente no
+        # reproduce audio (la chapa se muestra igual).
+        raise HTTPException(status_code=503, detail="Voz no configurada.")
+    except voz.VozError:
+        logger.exception("Error generando la voz de Melcochita")
+        raise HTTPException(status_code=502, detail="No se pudo generar la voz.")
+    return Response(content=audio, media_type="audio/mpeg")
+
+
+# Audios de las frases de carga (voz de Melcochita), servidos estáticos en
+# /audio-carga -> carpeta frases-carga-melcochometro/. Debe montarse ANTES
+# del catch-all "/". El frontend los pide como "audio-carga/<archivo>.mp3".
+AUDIO_CARGA_DIR = PROJECT_ROOT / "frases-carga-melcochometro"
+if AUDIO_CARGA_DIR.is_dir():
+    app.mount("/audio-carga", StaticFiles(directory=AUDIO_CARGA_DIR), name="audio-carga")
+else:
+    logger.warning("No se encontró la carpeta de audios de carga: %s", AUDIO_CARGA_DIR)
 
 # Rutas API primero; el frontend estático se monta al final en "/".
 app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")

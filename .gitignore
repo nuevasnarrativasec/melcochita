@@ -5,3 +5,10 @@ __pycache__
 *.pyc
 .DS_Store
 outputs/
+Claude-outputs/
+Claude outputs/
+_to_delete/
+eleven_test.mp3
+prueba_voz.mp3
+*.wav
+prueba_flash.mp3
