@@ -97,15 +97,18 @@ label {
   color: #8a8171;
 }
 
-input[type="text"] {
+input[type="text"],
+select {
   padding: 10px 12px;
   border: 1px solid #d8d2c4;
   border-radius: 8px;
   font-size: 1rem;
   width: 100%;
+  background: #fff;
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus,
+select:focus {
   outline: none;
   border-color: #b3401f;
 }

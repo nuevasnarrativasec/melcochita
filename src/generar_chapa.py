@@ -1,52 +1,34 @@
 """
-generar_chapa.py (v3)
+generar_chapa.py (v2)
 
 Piloto Melcochómetro — Motor generativo con "ADN Melcocha" real.
 
-Historia del diseño:
-  v1 -> chapas demasiado LITERALES ("León despeinado" para "pelo largo").
-  v2 -> una sola llamada que producía la chapa Y sus 6 puntajes a la vez,
-        con una operación del corpus FORZADA por slot. Dos problemas:
-          (1) con el schema estricto, el modelo escribía la `chapa` como
-              PRIMER campo, es decir SIN razonar: los puntajes que venían
-              después eran racionalizaciones de algo ya decidido a ciegas.
-          (2) forzar una operación por candidato convertía la tarea en
-              "rellenar una plantilla del corpus", no en "hacer un chiste
-              sobre esta persona" -> resultado armado y sin sentido.
+La primera versión producía construcciones correctas pero DEMASIADO
+LITERALES (ej. "León despeinado" para "pelo largo y despeinado"): el
+input se traducía casi textualmente. Esta versión trata el input del
+usuario como un DISPARADOR SEMÁNTICO, no como una descripción a calcar:
 
-v3 — FLUJO DE DOS LLAMADAS (razonamiento explícito + juicio en frío):
+    rasgo -> asociación semántica -> referente inesperado ->
+    desplazamiento absurdo -> patrón compatible del corpus -> chapa
 
-    LLAMADA 1 (creativa):  parte de la PERSONA, no de una operación.
-        El modelo razona en prosa (campo `cadena_asociativa`, que va
-        ANTES de `chapa` en el schema: así el apodo queda condicionado
-        por el razonamiento recién escrito) siguiendo el proceso mental
-        de Melcochita: mira -> asocia libre -> aterriza una imagen
-        concreta y absurda. NO se fuerza operación. NO se autoevalúa.
-        Temperatura alta, ~12 chapas crudas por ronda.
-
-    LLAMADA 2 (juez):  un evaluador en CONTEXTO LIMPIO (no vio cómo se
-        crearon) puntúa las chapas crudas en frío contra los ejemplos
-        Gold y la rúbrica de 6 dimensiones, y les asigna operación /
-        dominio / patrón. Como no es el autor, el scoring por fin es
-        honesto y los umbrales filtran de verdad. Temperatura baja.
-
-El corpus cambia de rol: ya NO es molde de generación, es (a) calibración
-de estilo (ejemplos Gold como few-shot) y (b) referencia de VARIEDAD para
-el juez (evitar que las finalistas usen todas la misma operación).
-
-Contrato PÚBLICO sin cambios (app.py sigue igual):
-  - cargar_api_key(), cargar_repertorio_generativo(),
-    cargar_corpus_gold_textos(), filtrar_seguridad(...)
-  - generar_para_perfil(client, repertorio, textos_corpus_gold, nombre,
-    caracteristica, costumbre, objeto, guardar_raw_en=None) -> dict con
-    las mismas claves; cada candidato conserva TODAS las claves de v2
-    (chapa, operacion, dominio_semantico_principal, patron_estructural,
-    senal_utilizada, las 6 dimensiones y riesgo_atributo_sensible) y suma
-    `cadena_asociativa` para trazabilidad.
+Cambios sobre v1:
+  - 12 candidatos internos por ronda (antes 5), con operación asignada y
+    forzada por candidato para garantizar diversidad real.
+  - Scoring de 6 dimensiones separadas (ya no un solo "calidad_estimada"):
+    correccion_linguistica, conexion_con_input, sorpresa_semantica,
+    absurdo_controlado, adn_melcocha, originalidad_vs_corpus.
+  - Para pasar al TOP 5 se exige adn_melcocha>=4 AND sorpresa_semantica>=4
+    AND originalidad_vs_corpus>=4 (umbral duro, no promedio).
+  - Si la primera ronda no produce 5 candidatos que superen el umbral, se
+    hace UNA segunda ronda (más candidatos, no criterios más laxos) y se
+    combinan ambas rondas antes de seleccionar.
+  - Selección final: top 5 por adn_melcocha (desempate por
+    sorpresa_semantica, luego originalidad_vs_corpus) entre los que
+    superan el umbral — NO por promedio de las 6 dimensiones.
 
 Sigue sin copiar literalmente ninguna chapa del Corpus Gold y sin usar
-componentes marcados como no aptos (habilitado_generacion=False, o
-NACIONALIDAD_ORIGEN/ATRIBUTO_PERSONAL_SENSIBLE).
+componentes marcados como no aptos para generación (habilitado_generacion
+=False, o NACIONALIDAD_ORIGEN/ATRIBUTO_PERSONAL_SENSIBLE).
 
 Uso:
     .venv/bin/python src/generar_chapa.py \\
@@ -62,7 +44,10 @@ import json
 import random
 import re
 import sys
+import unicodedata
+import difflib
 from collections import defaultdict
+from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -78,34 +63,44 @@ except ImportError:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 V2_CSV = PROJECT_ROOT / "data" / "analysis" / "adn_humoristico_v2.csv"
 CHAPAS_UNICAS_GOLD = PROJECT_ROOT / "data" / "corpus" / "chapas_unicas_gold.csv"
+CHAPAS_ORIGINALES_CURADAS = PROJECT_ROOT / "data" / "corpus" / "chapas_originales_curadas.csv"
+REGLAS_EXCLUSION = PROJECT_ROOT / "data" / "safety" / "reglas_exclusion.csv"
 
 OUTPUT_DIR = PROJECT_ROOT / "outputs" / "generaciones"
 
-# Dos modelos, un rol cada uno. Por defecto ambos gpt-4o (el creativo ya
-# "razona" gracias a cadena_asociativa-primero, así que no hace falta un
-# modelo de razonamiento para notar la mejora). Si en el futuro quieres
-# subir el techo creativo, cambia SOLO MODEL_GENERACION por un modelo de
-# razonamiento (serie o / gpt-5 con reasoning effort) y deja el juez
-# barato — el juicio no necesita creatividad, sí consistencia.
-MODEL_GENERACION = "gpt-4o"
-# El juez hace un trabajo MECÁNICO (puntuar contra una rúbrica), no creativo:
-# gpt-4o-mini es bastante más rápido y barato y la calidad de juicio aguanta.
-# La creatividad se queda en MODEL_GENERACION (gpt-4o).
-MODEL_JUEZ = "gpt-4o-mini"
+# Modelo de calidad (no el económico usado para extracción): generación
+# creativa con reglas de seguridad estrictas; se prioriza calidad sobre
+# costo para este piloto.
+MODEL = "gpt-4o"
 
-# 8 en vez de 12: acorta tanto la generación como el juicio (menos tokens de
-# salida = menos latencia). Con el juez afinado y necesitando solo 1-2
-# ganadores para la web, 8 candidatos sobran.
-NUM_CANDIDATOS_POR_RONDA = 8
-# Objetivo por defecto del CLI (para su análisis de TOP 5). La web pasa un
-# objetivo mucho menor (1-2): así la ronda 1 casi siempre basta y no se
-# encadena una segunda ronda solo para rankear finalistas que nadie ve.
+NUM_CANDIDATOS_POR_RONDA = 12
 NUM_RESULTADOS = 5
 MAX_RONDAS = 2
 
 UMBRAL_ADN_MELCOCHA = 4
 UMBRAL_SORPRESA_SEMANTICA = 4
 UMBRAL_ORIGINALIDAD_VS_CORPUS = 4
+UMBRAL_SIMILITUD_REFERENCIA = 0.90
+
+# Estadísticas observadas en las 67 chapas originales únicas. Se usan como
+# prior estilístico: el corpus es extremadamente breve y concentra unos pocos
+# mecanismos recurrentes.
+MEDIANA_PALABRAS_ORIGINALES = 3
+MAX_PALABRAS_ESTILO_FUERTE = 5
+FRECUENCIA_MECANISMOS_ORIGINALES = {
+    "YUXTAPOSICION_BREVE": 18,
+    "ENCADENAMIENTO_DE": 12,
+    "REFERENCIA_CULTURAL_DESPLAZADA": 11,
+    "HIBRIDACION_CON": 7,
+    "FORMULA_LE_DICEN": 5,
+    "ETIQUETA_MINIMA": 4,
+    "COMPOSICION_ABSURDA": 3,
+    "REFERENCIA_CULTURAL_DEFORMADA": 3,
+    "LOCALIZACION_ABSURDA": 2,
+    "DEFORMACION_LEXICA": 1,
+    "EQUIVALENCIA_COLECTIVA": 1,
+}
+MECANISMOS_CORPUS = list(FRECUENCIA_MECANISMOS_ORIGINALES)
 
 OPERACIONES = [
     "COMPARAR", "ANIMALIZAR", "COSIFICAR", "REFERENCIAR", "LOCALIZAR", "DEFORMAR",
@@ -116,8 +111,11 @@ OPERACIONES = [
 CATEGORIAS_EXCLUIDAS_DE_INSPIRACION = {"NACIONALIDAD_ORIGEN", "ATRIBUTO_PERSONAL_SENSIBLE"}
 
 PALABRAS_ALERTA_SENSIBLE = [
-    "gay", "lesbiana", "homosexual", "trans", "maricón", "marica",
-    "discapacit", "invalid", "retrasad", "mongol",
+    # Solo categorías protegidas/sensibles que no deben convertirse en
+    # motivo de burla. El corpus histórico puede conservarlas, pero no se
+    # usan para generar nuevas chapas.
+    "gay", "lesbiana", "homosexual", "bisexual", "trans", "maricón", "marica",
+    "discapacit", "invalid", "retrasad", "mongol", "autista",
     "cristiano", "musulman", "judío", "judio", "ateo",
     "cancer", "cáncer", "sida", "vih", "enfermo terminal",
 ]
@@ -132,24 +130,8 @@ EJEMPLOS_MALOS_V1 = [
 # calibrar el nivel de sorpresa/especificidad/absurdo).
 EJEMPLOS_CALIBRACION_CORPUS = [
     "Barbie de la Huerta Perdida", "ojo de caca de loro", "sirena del río Ucayali",
-    "pezón con piernas", "espalda de espina de pejerrey", "barrabás de ambiente",
+    "vaso con brazos", "zapatilla con ojos", "sonrisa de cebra",
     "meteorito con lentes",
-]
-
-# Set AMPLIADO de ejemplos Gold reales SOLO para el JUEZ: cuantos más
-# ejemplos del listón vea el evaluador, mejor distingue una buena chapa de
-# una mediocre. Como es texto de ENTRADA (no de salida), casi no agrega
-# latencia — es la mejora de precisión "gratis". Elegidos por ser vívidos,
-# variados en dominio (animal/comida/objeto/personaje/lugar/criatura) y
-# SIN atributos sensibles ni nacionalidad usada como burla.
-EJEMPLOS_CALIBRACION_JUEZ = [
-    "Barbie de la Huerta Perdida", "ojo de caca de loro", "sirena del río Ucayali",
-    "pezón con piernas", "espalda de espina de pejerrey", "barrabás de ambiente",
-    "meteorito con lentes", "peinado de iguana", "pelo de choclo", "intestino gallo",
-    "cara de murciélago", "serpiente cobra ciega", "vaso con brazos", "zapatilla con ojos",
-    "abuelita de katanas", "panetón quemado", "espantapájaro basurante", "sonrisa de cebra",
-    "rana cejona", "lagartija calma", "costal de papas", "rocola", "pavo de navidad",
-    "don cochote", "chirimoya blanca",
 ]
 
 
@@ -163,16 +145,182 @@ def cargar_api_key():
 
 
 def _normalizar(texto):
-    t = texto.strip().lower()
+    t = (texto or "").strip().lower()
     t = re.sub(r"[¡¿!?.,;:\"'‘’“”]", "", t)
     t = re.sub(r"\s+", " ", t).strip()
     return t
 
 
+def _normalizar_ascii(texto):
+    """Normalización auxiliar para reglas de seguridad y comparación tolerante."""
+    t = _normalizar(texto)
+    t = unicodedata.normalize("NFKD", t)
+    return "".join(c for c in t if not unicodedata.combining(c))
+
+
+@lru_cache(maxsize=1)
+def cargar_originales_curadas():
+    if not CHAPAS_ORIGINALES_CURADAS.exists():
+        return []
+    with open(CHAPAS_ORIGINALES_CURADAS, "r", encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+@lru_cache(maxsize=1)
+def cargar_reglas_exclusion():
+    if not REGLAS_EXCLUSION.exists():
+        return []
+    with open(REGLAS_EXCLUSION, "r", encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def detectar_reglas_exclusion(texto, ambito="salida"):
+    """
+    Aplica únicamente reglas relativas a atributos protegidos/sensibles.
+    Otras categorías editoriales del diccionario histórico (edad, cuerpo,
+    violencia no gráfica, etc.) permanecen documentadas pero no bloquean
+    automáticamente esta versión del generador.
+    """
+    categorias_activas = {
+        "ORIENTACION_SEXUAL", "IDENTIDAD_GENERO", "ORIENTACION_SEXUAL_CODIFICADA",
+        "NACIONALIDAD_ORIGEN", "DISCAPACIDAD", "RELIGION_IDENTIDAD",
+        "SALUD_CONDICION_MEDICA",
+    }
+    t = _normalizar_ascii(texto)
+    hallazgos = []
+    for regla in cargar_reglas_exclusion():
+        if regla.get("accion") != "BLOQUEAR" or regla.get("categoria") not in categorias_activas:
+            continue
+        ambito_regla = (regla.get("ambito") or "todos").strip().lower()
+        if ambito_regla not in {"todos", ambito}:
+            continue
+        patron = regla.get("patron", "")
+        if not patron:
+            continue
+        if regla.get("tipo") == "literal":
+            coincide = patron.lower() in t
+        else:
+            coincide = bool(re.search(patron, t, flags=re.IGNORECASE))
+        if coincide:
+            hallazgos.append({
+                "id": regla.get("id", ""),
+                "categoria": regla.get("categoria", ""),
+                "razon": regla.get("razon", ""),
+            })
+    return hallazgos
+
+
+def sanitizar_senales(caracteristica, costumbre, objeto):
+    """
+    Nunca usa como disparador una señal que coincide con categorías bloqueadas.
+    Esto evita casos donde la salida parece inocua, pero la lógica de burla
+    depende de una característica sensible (p.ej. orientación sexual).
+    """
+    senales = {
+        "caracteristica": caracteristica or "",
+        "costumbre": costumbre or "",
+        "objeto": objeto or "",
+    }
+    descartadas = {}
+    for clave, valor in list(senales.items()):
+        hallazgos = detectar_reglas_exclusion(valor, ambito="entrada")
+        if hallazgos:
+            descartadas[clave] = hallazgos
+            senales[clave] = ""
+    return senales, descartadas
+
+
+def _riesgo_protegido_original(registro):
+    categoria = (registro.get("categoria_riesgo") or "").upper()
+    bloqueos = (
+        "ORIENTACION_SEXUAL", "NACIONALIDAD_ORIGEN", "DISCAPACIDAD",
+        "RELIGION", "SALUD_CONDICION_MEDICA", "IDENTIDAD_GENERO",
+        "SEXUALIZACION_MISOGINIA",
+    )
+    return any(b in categoria for b in bloqueos)
+
+
+def cargar_originales_publicables():
+    """
+    Pool de originales que sí pueden aparecer directamente en el generador.
+    Se preserva TODO el corpus en CSV; aquí solo se excluyen entradas cuya
+    comicidad depende de un atributo protegido o de misoginia explícita.
+    """
+    return [r for r in cargar_originales_curadas() if not _riesgo_protegido_original(r)]
+
+
+def cargar_calibracion_originales(max_ejemplos=24):
+    """
+    Usa una muestra amplia de originales publicables para calibrar ritmo,
+    mecanismos y densidad visual. Ya no excluye automáticamente edad,
+    apariencia, humor negro o tono áspero: forman parte del corpus cómico.
+    """
+    base = cargar_originales_publicables()
+    ejemplos = []
+    mecanismos_vistos = set()
+    for r in base:
+        mecanismo = r.get("mecanismo_observado", "")
+        if mecanismo and mecanismo not in mecanismos_vistos:
+            ejemplos.append(r.get("chapa_original", ""))
+            mecanismos_vistos.add(mecanismo)
+        if len(ejemplos) >= max_ejemplos:
+            break
+    if len(ejemplos) < max_ejemplos:
+        for r in base:
+            chapa = r.get("chapa_original", "")
+            if chapa and chapa not in ejemplos:
+                ejemplos.append(chapa)
+            if len(ejemplos) >= max_ejemplos:
+                break
+
+    logicas = []
+    vistas = set()
+    for r in base:
+        clave = (r.get("mecanismo_observado", ""), r.get("patron_abstracto", ""))
+        if clave in vistas:
+            continue
+        vistas.add(clave)
+        logicas.append(
+            f"{r.get('mecanismo_observado', '')}: {r.get('patron_abstracto', '')} — "
+            f"{r.get('logica_observada', '')}"
+        )
+    return ejemplos, logicas
+
+
 def cargar_corpus_gold_textos():
+    """
+    Corpus de NO-COPIA: une el Gold previo con TODAS las chapas originales
+    curadas, incluidas las bloqueadas. Así ninguna original puede reaparecer
+    literalmente, aunque se conserve como material histórico.
+    """
     with open(CHAPAS_UNICAS_GOLD, "r", encoding="utf-8", newline="") as f:
         rows = list(csv.DictReader(f))
-    return {_normalizar(r["texto_canonico"]) for r in rows}
+    textos = {_normalizar(r["texto_canonico"]) for r in rows}
+    textos.update(
+        _normalizar(r.get("chapa_original", ""))
+        for r in cargar_originales_curadas()
+        if r.get("chapa_original")
+    )
+    return {t for t in textos if t}
+
+
+def es_variacion_cercana_referencia(texto, textos_referencia):
+    """
+    Defensa contra copias casi literales. Es deliberadamente conservadora:
+    solo dispara con similitud muy alta; la originalidad semántica sigue
+    evaluándose además por el modelo.
+    """
+    candidato = _normalizar_ascii(texto)
+    if len(candidato) < 8:
+        return None
+    for ref in textos_referencia:
+        refn = _normalizar_ascii(ref)
+        if len(refn) < 8:
+            continue
+        similitud = difflib.SequenceMatcher(None, candidato, refn).ratio()
+        if similitud >= UMBRAL_SIMILITUD_REFERENCIA:
+            return {"referencia": ref, "similitud": round(similitud, 3)}
+    return None
 
 
 def cargar_repertorio_generativo():
@@ -198,65 +346,120 @@ def cargar_repertorio_generativo():
     return repertorio, len(usables)
 
 
-# =====================================================================
-# LLAMADA 1 — GENERACIÓN CREATIVA (razona antes de decidir la chapa)
-# =====================================================================
+def asignar_operaciones(n, ronda_seed):
+    """
+    Fuerza diversidad real: reparte las 11 operaciones entre los n
+    candidatos (cada una al menos una vez si n>=11, sin repetir hasta
+    agotar el ciclo), en orden aleatorio distinto por ronda.
+    """
+    rnd = random.Random(ronda_seed)
+    ciclos = []
+    ops = OPERACIONES[:]
+    while len(ciclos) < n:
+        rnd.shuffle(ops)
+        ciclos.extend(ops)
+    return ciclos[:n]
 
-def construir_system_prompt_generacion():
-    return f"""Eres Melcochita en vivo: miras a una persona y le sueltas una CHAPA \
-(apodo) al instante. Tu humor NO nace de rellenar plantillas gramaticales — nace de \
-MIRAR y ASOCIAR LIBREMENTE hasta aterrizar una imagen concreta, vívida y absurda.
 
-EL PROCESO MENTAL (obligatorio, en este orden) para cada candidato:
-    señal del usuario (característica / costumbre / objeto)
-      -> ¿a qué me hace acordar? (asociación libre, sin censura literal)
-      -> salto a un referente INESPERADO y CONCRETO (un animal específico, una comida, \
-un personaje, un lugar, un bicho... nunca una categoría genérica)
-      -> deformación / exageración absurda pero ENTENDIBLE
-      -> la chapa: corta, sonora, con imagen mental inmediata.
+def construir_system_prompt(repertorio):
+    ejemplos_originales, logicas_originales = cargar_calibracion_originales()
+    lineas_repertorio = []
+    for op, ejemplos in repertorio.items():
+        lineas_repertorio.append(f"- {op}:")
+        for e in ejemplos:
+            lineas_repertorio.append(f"    patrón: {e['patron_reutilizable']}  (mecanismo: {e['mecanismo_humoristico']})")
+    repertorio_texto = "\n".join(lineas_repertorio)
 
-El input NO se traduce: es un DISPARADOR. NO es obligatorio que las palabras del usuario \
-aparezcan en la chapa. Usa NORMALMENTE UNA sola señal como disparador (no concatenes las tres).
+    return f"""Eres el motor generativo del "Melcochómetro": generas chapas NUEVAS al \
+estilo del humorista peruano Melcochita.
 
-EJEMPLOS QUE FALLARON (demasiado literales/previsibles — NO produzcas nada de este nivel):
+CAMBIO CONCEPTUAL CLAVE: el input del usuario (característica, costumbre, objeto) es un \
+DISPARADOR SEMÁNTICO, NO una descripción a traducir literalmente. NO es obligatorio que \
+las palabras del usuario aparezcan en la chapa. El proceso mental que debes seguir para \
+cada candidato es:
+
+    rasgo del usuario -> asociación semántica -> referente INESPERADO ->
+    desplazamiento absurdo -> patrón compatible del repertorio -> chapa
+
+EJEMPLOS QUE FALLARON en la primera prueba (demasiado literales/previsibles — NO repitas \
+este nivel de literalidad):
 {chr(10).join(f'  - "{e}"' for e in EJEMPLOS_MALOS_V1)}
-Todos son "[categoría] + descripción casi textual del input". Eso es lo que hay que EVITAR.
+Todos ellos son solo "[categoría] + descripción casi textual del input". Eso es \
+insuficiente.
 
-EJEMPLOS REALES de Melcochita (Corpus Gold) que fijan el NIVEL de desplazamiento, \
-especificidad y absurdo — úsalos SOLO para calibrar el tono; JAMÁS los copies, recombines \
-sus palabras ni hagas variaciones cercanas:
+EJEMPLOS REALES del Corpus Gold que ilustran el NIVEL de desplazamiento semántico, \
+especificidad y absurdo que buscamos (úsalos SOLO para calibrar el nivel de sorpresa — \
+JAMÁS los copies, recombines sus palabras, ni generes variaciones cercanas de ellos):
 {chr(10).join(f'  - "{e}"' for e in EJEMPLOS_CALIBRACION_CORPUS)}
-Fíjate: "pezón con piernas" no describe un pezón; es un SALTO a una imagen absurda \
-concreta. "meteorito con lentes" no describe unos lentes; asocia hacia algo inesperado. \
-Ese salto es lo que buscamos.
 
-REGLAS:
-- El nombre de la persona es solo CONTEXTO; normalmente NO aparece dentro de la chapa.
-- ESPECIFICIDAD ante todo: nombres/objetos concretos, no categorías genéricas ("animal", \
-"cosa"). Combina dominios semánticos ALEJADOS entre sí. Prioriza sonoridad y brevedad.
-- Que cada chapa sea DISTINTA de las otras: variá el tipo de imagen (animal, comida, \
-personaje, objeto, lugar, criatura mítica...). No repitas la misma fórmula 12 veces.
-- NUNCA reproduzcas ni parafrasees de cerca una chapa del corpus real.
+CHAPAS ORIGINALES aportadas como referencia adicional. Se conserva su comicidad y se usa una \
+muestra amplia del corpus publicable para calibrar ritmo, imagen mental y nivel de desplazamiento. \
+Úsalas solo como referencia estructural; NO copies ni hagas variaciones cercanas:
+{chr(10).join(f'  - "{e}"' for e in ejemplos_originales)}
 
-PROHIBIDO SIEMPRE (aunque el usuario lo sugiera indirectamente):
-- Contenido basado en orientación sexual, raza/etnia, discapacidad, religión, condición \
-médica u otro atributo personal sensible.
-- Convertir la nacionalidad/origen de la persona en objeto de burla.
-- Ataques sexuales explícitos o contenido sexual explícito.
+LÓGICAS ABSTRACTAS observadas en las chapas originales publicables:
+{chr(10).join(f'  - {e}' for e in logicas_originales)}
 
-Para cada candidato entrega, EN ESTE ORDEN:
-- cadena_asociativa: 1–2 frases donde PIENSAS EN VOZ ALTA el salto (señal -> asociación -> \
-referente inesperado -> imagen absurda). Escríbela ANTES de decidir la chapa; la chapa \
-debe ser consecuencia de esta cadena, no al revés.
-- chapa: el apodo final, corto, en español, estilo Melcochita.
+La lógica buscada NO es copiar vocabulario sino reproducir el movimiento mental: partir \
+de una señal, alejarse de lo literal y aterrizar en una imagen concreta, breve e inesperada.
+
+REPERTORIO REAL observado en el corpus (operaciones con patrones/mecanismos de ejemplo — \
+inspiración de ESTRUCTURA, nunca de palabras a copiar):
+{repertorio_texto}
+
+REGLAS DE CONSTRUCCIÓN:
+- El "nombre_o_apodo" es solo CONTEXTO: normalmente NO debe aparecer dentro de la chapa.
+- Si existe una característica física, PRIORIZA esa señal como disparador. Usa costumbre u objeto sobre todo cuando aporten un remate mucho mejor.\n- Usa NORMALMENTE UNA sola señal principal como disparador (no concatenes las tres).
+- Cada candidato debe usar la operación que se le asigna explícitamente en el input (campo \
+"operacion_asignada" de cada slot) — es una instrucción OBLIGATORIA, no una sugerencia.
+- Prioriza: asociación inesperada, imagen mental inmediata, ESPECIFICIDAD (nombres/objetos \
+concretos, no categorías genéricas como "animal" sin más), combinar dominios semánticos \
+alejados entre sí, sonoridad, absurdo entendible y BREVEDAD. En el corpus original la mediana es \
+de 3 palabras y 52 de 67 chapas únicas tienen 3 palabras o menos: esa economía verbal es una \
+señal estilística fuerte.
+- PENALIZA en tu propia autoevaluación (baja los puntajes correspondientes) si el \
+resultado tiene: adjetivos descriptivos obvios: "[animal] + característica literal del \
+usuario"; "[objeto] con [objeto del usuario]" sin ningún desplazamiento real; insultos \
+genéricos; o cualquier frase que podría haberse generado sin conocer el Corpus Gold.
+- NUNCA reproduzcas literalmente una chapa que ya exista en el corpus real.
+
+PROHIBIDO SIEMPRE (sin excepción, aunque el usuario lo sugiera indirectamente):
+- Contenido cuya burla dependa de orientación sexual, identidad de género, raza/etnia, discapacidad, \
+religión, condición médica, nacionalidad/origen u otro atributo protegido/sensible.
+- Misoginia o degradación basada en ser hombre o mujer. El sexo indicado por el usuario sirve SOLO \
+para concordancia gramatical y compatibilidad del referente, no como motivo del chiste.
+- Si una señal del usuario cae en estas categorías, IGNÓRALA: no busques una forma codificada \
+de burlarte de ese atributo.
+
+Para cada candidato reporta:
+- chapa: el texto de la chapa nueva (corta, en español, estilo Melcochita).
+- operacion: DEBE ser exactamente la "operacion_asignada" que se te dio para ese slot.
+- dominio_semantico_principal: el dominio conceptual central (ej. ANIMAL, OBJETO, COMIDA, \
+GEOGRAFIA, PERSONAJE_POPULAR, PERSONAJE_MITICO, FENOMENO, etc. — nunca NACIONALIDAD_ORIGEN \
+ni ATRIBUTO_PERSONAL_SENSIBLE).
+- patron_estructural: el patrón con categorías entre corchetes que efectivamente usaste.
+- mecanismo_corpus: clasifica la chapa en uno de los mecanismos del corpus indicados en el schema.
 - senal_utilizada: "caracteristica", "costumbre", "objeto", o combinación breve si usaste dos.
+- correccion_linguistica (1-5): ¿la frase es gramaticalmente correcta y suena natural en \
+español?
+- conexion_con_input (1-5): ¿hay una relación reconocible con el disparador, aunque no sea \
+literal?
+- sorpresa_semantica (1-5): ¿el referente elegido es inesperado, no obvio?
+- absurdo_controlado (1-5): ¿el absurdo es entendible/gracioso, no solo aleatorio?
+- adn_melcocha (1-5): valora especialmente asociación inesperada, imagen mental inmediata, \
+especificidad, combinación de dominios alejados, sonoridad, absurdo entendible, brevedad. \
+NO es solo "usa una estructura del corpus" — penaliza fuerte los patrones de los ejemplos \
+que fallaron.
+- originalidad_vs_corpus (1-5): ¿tan lejos está de ser una copia/variación cercana de \
+cualquier chapa real del corpus (incluyendo los ejemplos de calibración)?
+- riesgo_atributo_sensible: booleano, autoevaluación honesta.
 
-No te autoevalúes ni pongas puntajes: otro evaluador juzgará después. Tu único trabajo aquí \
-es ASOCIAR y CREAR con audacia. Es mejor arriesgar imágenes raras y específicas que jugar a \
-lo seguro."""
+Sé un evaluador HONESTO y EXIGENTE contigo mismo: no todos los candidatos deben salir con \
+puntajes altos. Es normal y esperado que varios candidatos no superen el nivel del Corpus \
+Gold."""
 
 
-def construir_schema_generacion():
+def construir_schema():
     return {
         "type": "object",
         "properties": {
@@ -265,119 +468,12 @@ def construir_schema_generacion():
                 "items": {
                     "type": "object",
                     "properties": {
-                        "cadena_asociativa": {"type": "string"},
                         "chapa": {"type": "string"},
-                        "senal_utilizada": {"type": "string"},
-                    },
-                    "required": ["cadena_asociativa", "chapa", "senal_utilizada"],
-                    "additionalProperties": False,
-                },
-            }
-        },
-        "required": ["candidatos"],
-        "additionalProperties": False,
-    }
-
-
-def generar_ronda(client, nombre, caracteristica, costumbre, objeto, numero_ronda):
-    system_prompt = construir_system_prompt_generacion()
-
-    payload = {
-        "nombre_o_apodo": nombre,
-        "caracteristica": caracteristica,
-        "costumbre": costumbre,
-        "objeto_que_siempre_usa": objeto,
-        "cuantas_chapas": NUM_CANDIDATOS_POR_RONDA,
-        "ronda": numero_ronda,
-    }
-    if numero_ronda > 1:
-        payload["nota"] = (
-            "La ronda anterior no dio suficientes chapas a la altura del Corpus Gold. "
-            "Sé MÁS audaz en el salto semántico: aléjate más del significado literal, "
-            "busca referentes más inesperados y más específicos."
-        )
-
-    temperatura = 1.0 if numero_ronda == 1 else 1.2
-
-    completion = client.chat.completions.create(
-        model=MODEL_GENERACION,
-        temperature=temperatura,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
-        ],
-        response_format={
-            "type": "json_schema",
-            "json_schema": {"name": "chapas_crudas_v3", "strict": True, "schema": construir_schema_generacion()},
-        },
-    )
-    parsed = json.loads(completion.choices[0].message.content)
-    return parsed.get("candidatos", []), completion
-
-
-# =====================================================================
-# LLAMADA 2 — JUEZ (contexto limpio: puntúa en frío, no fue el autor)
-# =====================================================================
-
-def construir_system_prompt_juez(repertorio):
-    lineas_repertorio = []
-    for op, ejemplos in repertorio.items():
-        lineas_repertorio.append(f"- {op}:")
-        for e in ejemplos:
-            lineas_repertorio.append(f"    patrón: {e['patron_reutilizable']}  (mecanismo: {e['mecanismo_humoristico']})")
-    repertorio_texto = "\n".join(lineas_repertorio)
-
-    return f"""Eres un EVALUADOR crítico y exigente del humor de Melcochita. NO escribiste \
-estas chapas: las juzgas en frío. Tu trabajo es puntuarlas con honestidad y clasificarlas — \
-no hacerlas quedar bien. Es normal y esperado que varias sean mediocres.
-
-EJEMPLOS REALES del Corpus Gold (el LISTÓN que deben alcanzar; una chapa buena está a esta \
-altura de sorpresa, especificidad y absurdo):
-{chr(10).join(f'  - "{e}"' for e in EJEMPLOS_CALIBRACION_JUEZ)}
-
-EJEMPLOS QUE FALLAN por LITERALES/previsibles (si una chapa se parece a esto, castígala \
-fuerte en adn_melcocha y sorpresa_semantica):
-{chr(10).join(f'  - "{e}"' for e in EJEMPLOS_MALOS_V1)}
-
-REPERTORIO de operaciones humorísticas observadas en el corpus (úsalo para CLASIFICAR cada \
-chapa en una operación y para juzgar VARIEDAD — no para exigir ninguna en particular):
-{repertorio_texto}
-
-Para CADA chapa recibida (respeta su `indice`) reporta:
-- indice: el mismo número entero que trae la chapa en el input.
-- operacion: la operación del repertorio que MEJOR describe cómo está construida (de la lista dada).
-- dominio_semantico_principal: dominio conceptual central (ANIMAL, OBJETO, COMIDA, GEOGRAFIA, \
-PERSONAJE_POPULAR, PERSONAJE_MITICO, FENOMENO, etc. — nunca NACIONALIDAD_ORIGEN ni \
-ATRIBUTO_PERSONAL_SENSIBLE).
-- patron_estructural: el patrón con categorías entre corchetes que efectivamente usa.
-- correccion_linguistica (1-5): ¿es gramatical y suena natural en español?
-- conexion_con_input (1-5): ¿hay relación reconocible con el disparador, aunque no sea literal?
-- sorpresa_semantica (1-5): ¿el referente es inesperado, no obvio?
-- absurdo_controlado (1-5): ¿el absurdo es entendible/gracioso, no ruido aleatorio?
-- adn_melcocha (1-5): asociación inesperada + imagen mental inmediata + especificidad + \
-combinación de dominios alejados + sonoridad + absurdo entendible + brevedad. Penaliza fuerte \
-lo literal y lo que se podría haber escrito SIN conocer a Melcochita.
-- originalidad_vs_corpus (1-5): ¿qué tan lejos está de ser copia o variación cercana de una \
-chapa real del corpus (incluidos los ejemplos de calibración)?
-- riesgo_atributo_sensible: booleano honesto (orientación sexual, raza/etnia, discapacidad, \
-religión, condición médica, o nacionalidad/origen usada como burla).
-
-Sé severo y usa TODO el rango 1-5. No infles puntajes."""
-
-
-def construir_schema_juez():
-    return {
-        "type": "object",
-        "properties": {
-            "evaluaciones": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "indice": {"type": "integer"},
                         "operacion": {"type": "string", "enum": OPERACIONES},
                         "dominio_semantico_principal": {"type": "string"},
                         "patron_estructural": {"type": "string"},
+                        "mecanismo_corpus": {"type": "string", "enum": MECANISMOS_CORPUS},
+                        "senal_utilizada": {"type": "string"},
                         "correccion_linguistica": {"type": "integer"},
                         "conexion_con_input": {"type": "integer"},
                         "sorpresa_semantica": {"type": "integer"},
@@ -387,102 +483,57 @@ def construir_schema_juez():
                         "riesgo_atributo_sensible": {"type": "boolean"},
                     },
                     "required": [
-                        "indice", "operacion", "dominio_semantico_principal", "patron_estructural",
-                        "correccion_linguistica", "conexion_con_input", "sorpresa_semantica",
-                        "absurdo_controlado", "adn_melcocha", "originalidad_vs_corpus",
-                        "riesgo_atributo_sensible",
+                        "chapa", "operacion", "dominio_semantico_principal", "patron_estructural",
+                        "mecanismo_corpus", "senal_utilizada", "correccion_linguistica", "conexion_con_input",
+                        "sorpresa_semantica", "absurdo_controlado", "adn_melcocha",
+                        "originalidad_vs_corpus", "riesgo_atributo_sensible",
                     ],
                     "additionalProperties": False,
                 },
             }
         },
-        "required": ["evaluaciones"],
+        "required": ["candidatos"],
         "additionalProperties": False,
     }
 
 
-# Valores por defecto seguros para una chapa que el juez no llegó a puntuar:
-# puntajes 0 (no supera ningún umbral, no se selecciona) y sin marca de riesgo
-# (los puntajes bajos ya la dejan fuera; el filtro de seguridad textual sigue
-# aplicando aparte). Así todo candidato conserva SIEMPRE las claves del contrato.
-_DEFAULTS_EVALUACION = {
-    "operacion": OPERACIONES[0],
-    "dominio_semantico_principal": "DESCONOCIDO",
-    "patron_estructural": "",
-    "correccion_linguistica": 0,
-    "conexion_con_input": 0,
-    "sorpresa_semantica": 0,
-    "absurdo_controlado": 0,
-    "adn_melcocha": 0,
-    "originalidad_vs_corpus": 0,
-    "riesgo_atributo_sensible": False,
-}
-
-
-def juzgar_candidatos(client, repertorio, chapas_crudas, caracteristica, costumbre, objeto):
-    """
-    Recibe la lista de chapas crudas (cada una con cadena_asociativa, chapa,
-    senal_utilizada) y devuelve la MISMA lista, cada dict enriquecido con las
-    6 dimensiones + operacion/dominio/patron + riesgo_atributo_sensible. El
-    juez trabaja en contexto limpio (no vio el prompt de generación).
-    Devuelve (candidatos_evaluados, completion) — completion puede ser None
-    si no había chapas que juzgar.
-    """
-    if not chapas_crudas:
-        return [], None
-
-    system_prompt = construir_system_prompt_juez(repertorio)
+def generar_ronda(client, repertorio, nombre, caracteristica, costumbre, objeto, numero_ronda, sexo="no_indica"):
+    system_prompt = construir_system_prompt(repertorio)
+    operaciones_asignadas = asignar_operaciones(NUM_CANDIDATOS_POR_RONDA, ronda_seed=numero_ronda)
 
     payload = {
-        "disparadores_originales": {
-            "caracteristica": caracteristica,
-            "costumbre": costumbre,
-            "objeto": objeto,
-        },
-        "chapas_a_evaluar": [
-            {"indice": i, "chapa": c["chapa"], "cadena_asociativa": c.get("cadena_asociativa", "")}
-            for i, c in enumerate(chapas_crudas)
-        ],
+        "nombre_o_apodo": nombre,
+        "caracteristica": caracteristica,
+        "costumbre": costumbre,
+        "objeto_que_siempre_usa": objeto,
+        "sexo": sexo,
+        "instruccion_sexo": "Usar solo para concordancia gramatical/compatibilidad; nunca como motivo de burla.",
+        "ronda": numero_ronda,
+        "slots": [{"indice": i + 1, "operacion_asignada": op} for i, op in enumerate(operaciones_asignadas)],
     }
+    if numero_ronda > 1:
+        payload["nota"] = (
+            "Ronda anterior no produjo suficientes candidatos con adn_melcocha>=4, "
+            "sorpresa_semantica>=4 y originalidad_vs_corpus>=4. Sé más audaz en el "
+            "desplazamiento semántico: aléjate más del significado literal del input."
+        )
+
+    temperatura = 1.0 if numero_ronda == 1 else 1.2
 
     completion = client.chat.completions.create(
-        model=MODEL_JUEZ,
-        temperature=0.2,
+        model=MODEL,
+        temperature=temperatura,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
         ],
         response_format={
             "type": "json_schema",
-            "json_schema": {"name": "evaluaciones_chapa_v3", "strict": True, "schema": construir_schema_juez()},
+            "json_schema": {"name": "candidatos_chapa_v2", "strict": True, "schema": construir_schema()},
         },
     )
-    parsed = json.loads(completion.choices[0].message.content)
+    return completion
 
-    evals_por_indice = {}
-    for e in parsed.get("evaluaciones", []):
-        idx = e.get("indice")
-        if isinstance(idx, int) and 0 <= idx < len(chapas_crudas):
-            evals_por_indice[idx] = e
-
-    candidatos = []
-    for i, cruda in enumerate(chapas_crudas):
-        evaluacion = evals_por_indice.get(i, {})
-        combinado = {
-            "chapa": cruda["chapa"],
-            "senal_utilizada": cruda.get("senal_utilizada", ""),
-            "cadena_asociativa": cruda.get("cadena_asociativa", ""),
-        }
-        for clave, defecto in _DEFAULTS_EVALUACION.items():
-            valor = evaluacion.get(clave, defecto)
-            combinado[clave] = valor if valor is not None else defecto
-        candidatos.append(combinado)
-    return candidatos, completion
-
-
-# =====================================================================
-# SEGURIDAD, UMBRAL Y SELECCIÓN (sin cambios de criterio vs v2)
-# =====================================================================
 
 def contiene_palabra_alerta(texto):
     """
@@ -499,17 +550,65 @@ def filtrar_seguridad(candidatos, textos_corpus_gold):
     for c in candidatos:
         motivos = []
         if _normalizar(c["chapa"]) in textos_corpus_gold:
-            motivos.append("coincide literalmente con una chapa real del Corpus Gold")
+            motivos.append("coincide literalmente con una chapa del corpus de referencia (Gold + originales)")
         if c.get("riesgo_atributo_sensible"):
-            motivos.append("el juez marcó riesgo_atributo_sensible=true")
+            motivos.append("el propio modelo marcó riesgo_atributo_sensible=true")
+
         alertas = contiene_palabra_alerta(c["chapa"])
         if alertas:
-            motivos.append(f"contiene palabra(s) de alerta: {alertas}")
+            motivos.append(f"contiene palabra(s) de alerta heredadas: {alertas}")
+
+        reglas = detectar_reglas_exclusion(c["chapa"], ambito="salida")
+        if reglas:
+            motivos.append(
+                "activa regla(s) del diccionario de exclusión: "
+                + ", ".join(f"{r['id']}:{r['categoria']}" for r in reglas)
+            )
+
+        cercana = es_variacion_cercana_referencia(c["chapa"], textos_corpus_gold)
+        if cercana:
+            motivos.append(
+                f"variación demasiado cercana a una chapa de referencia "
+                f"(similitud={cercana['similitud']})"
+            )
+
         if motivos:
             descartados.append((c, motivos))
         else:
             validos.append(c)
     return validos, descartados
+
+
+def calcular_score_estilo_original(c, caracteristica_disponible=True):
+    """Score determinista 0-100 inspirado en propiedades medibles del corpus.
+
+    No reemplaza la evaluación creativa del modelo: la complementa. Pondera
+    economía verbal, frecuencia real del mecanismo y uso del rasgo físico
+    cuando el usuario lo proporcionó.
+    """
+    palabras = re.findall(r"\b\w+\b", c.get("chapa", ""), flags=re.UNICODE)
+    n = len(palabras)
+    if n <= 3:
+        brevedad = 40
+    elif n <= 5:
+        brevedad = 32
+    elif n <= 7:
+        brevedad = 18
+    else:
+        brevedad = 5
+
+    mecanismo = c.get("mecanismo_corpus", "")
+    freq = FRECUENCIA_MECANISMOS_ORIGINALES.get(mecanismo, 0)
+    maxfreq = max(FRECUENCIA_MECANISMOS_ORIGINALES.values())
+    estructura = round(35 * (freq / maxfreq)) if maxfreq else 0
+
+    usa_caracteristica = "caracteristica" in (c.get("senal_utilizada") or "").lower()
+    fisico = 20 if (caracteristica_disponible and usa_caracteristica) else (8 if not caracteristica_disponible else 0)
+
+    # Bonus pequeño por conexión fuerte sin volver la chapa literal.
+    conexion = min(int(c.get("conexion_con_input", 0)), 5)
+    bonus = conexion
+    return min(100, brevedad + estructura + fisico + bonus)
 
 
 def cumple_umbral(c):
@@ -523,61 +622,66 @@ def cumple_umbral(c):
 def seleccionar_top5(candidatos_que_cumplen):
     return sorted(
         candidatos_que_cumplen,
-        key=lambda c: (-c["adn_melcocha"], -c["sorpresa_semantica"], -c["originalidad_vs_corpus"]),
+        key=lambda c: (-c.get("score_estilo_original", 0), -c["adn_melcocha"], -c["sorpresa_semantica"], -c["originalidad_vs_corpus"]),
     )[:NUM_RESULTADOS]
 
 
-def generar_para_perfil(client, repertorio, textos_corpus_gold, nombre, caracteristica, costumbre, objeto, guardar_raw_en=None, objetivo_candidatos=NUM_RESULTADOS):
+def generar_para_perfil(client, repertorio, textos_corpus_gold, nombre, caracteristica, costumbre, objeto, sexo="no_indica", guardar_raw_en=None, objetivo_candidatos=NUM_RESULTADOS):
     """
-    Ejecuta hasta MAX_RONDAS. Cada ronda = LLAMADA 1 (genera chapas crudas
-    con razonamiento) + LLAMADA 2 (el juez las puntúa en frío). No relaja
-    umbrales; corta apenas reúne `objetivo_candidatos` que los superen.
+    Ejecuta hasta MAX_RONDAS de generación (12 candidatos c/u), sin
+    relajar los umbrales, hasta reunir `objetivo_candidatos` candidatos que
+    los superen (o agotar las rondas).
 
-    `objetivo_candidatos` controla LATENCIA sin tocar los criterios: el CLI
-    usa el default (NUM_RESULTADOS=5) porque muestra un TOP 5; la web pasa
-    1-2, así la ronda 1 casi siempre basta y no se dispara una segunda ronda
-    solo para rankear finalistas que el usuario nunca ve. Contrato de retorno
-    idéntico a v2.
+    `objetivo_candidatos` controla LATENCIA sin tocar los criterios (portado
+    de la optimización de main): el CLI usa el default (NUM_RESULTADOS=5)
+    porque muestra un TOP 5; la web puede pasar un número menor para cortar
+    antes y responder más rápido. La selección final (seleccionar_top5) y
+    los umbrales no cambian.
+    Devuelve: dict con candidatos_totales, candidatos_validos_seguridad,
+    candidatos_que_cumplen_umbral, seleccionados, rondas_usadas, usage_total.
     """
+    senales_limpias, senales_descartadas = sanitizar_senales(caracteristica, costumbre, objeto)
+    caracteristica = senales_limpias["caracteristica"]
+    costumbre = senales_limpias["costumbre"]
+    objeto = senales_limpias["objeto"]
+
+    if not any(v.strip() for v in (caracteristica, costumbre, objeto)):
+        raise ValueError(
+            "Las señales disponibles se descartaron por seguridad. "
+            "Usa rasgos, costumbres u objetos que no dependan de atributos sensibles."
+        )
+
     todos_candidatos = []
     raw_por_ronda = []
     usage_total = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     rondas_usadas = 0
 
-    def _acumular_usage(completion):
-        if completion is None:
-            return
+    for ronda in range(1, MAX_RONDAS + 1):
+        rondas_usadas = ronda
+        try:
+            completion = generar_ronda(client, repertorio, nombre, caracteristica, costumbre, objeto, ronda, sexo=sexo)
+        except openai_module.OpenAIError as e:
+            print(f"ERROR de la API de OpenAI (ronda {ronda}): {e}", file=sys.stderr)
+            sys.exit(1)
+
+        raw_por_ronda.append(completion.model_dump())
         usage = getattr(completion, "usage", None)
         if usage:
             usage_total["prompt_tokens"] += usage.prompt_tokens
             usage_total["completion_tokens"] += usage.completion_tokens
             usage_total["total_tokens"] += usage.total_tokens
 
-    for ronda in range(1, MAX_RONDAS + 1):
-        rondas_usadas = ronda
-        try:
-            chapas_crudas, comp_gen = generar_ronda(client, nombre, caracteristica, costumbre, objeto, ronda)
-            candidatos_evaluados, comp_juez = juzgar_candidatos(
-                client, repertorio, chapas_crudas, caracteristica, costumbre, objeto
-            )
-        except openai_module.OpenAIError as e:
-            print(f"ERROR de la API de OpenAI (ronda {ronda}): {e}", file=sys.stderr)
-            sys.exit(1)
-
-        _acumular_usage(comp_gen)
-        _acumular_usage(comp_juez)
-        raw_por_ronda.append({
-            "ronda": ronda,
-            "generacion": comp_gen.model_dump() if comp_gen is not None else None,
-            "juicio": comp_juez.model_dump() if comp_juez is not None else None,
-        })
-
-        todos_candidatos.extend(candidatos_evaluados)
+        parsed = json.loads(completion.choices[0].message.content)
+        nuevos = parsed.get("candidatos", [])
+        for c in nuevos:
+            c["score_estilo_original"] = calcular_score_estilo_original(c, caracteristica_disponible=bool(caracteristica.strip()))
+        todos_candidatos.extend(nuevos)
 
         validos_seg, _ = filtrar_seguridad(todos_candidatos, textos_corpus_gold)
         que_cumplen = [c for c in validos_seg if cumple_umbral(c)]
+
         if len(que_cumplen) >= objetivo_candidatos:
-            break  # objetivo alcanzado: no se necesita una ronda adicional
+            break  # ya hay suficientes; corte temprano para bajar latencia
 
     validos_seguridad, descartados_seguridad = filtrar_seguridad(todos_candidatos, textos_corpus_gold)
     que_cumplen_umbral = [c for c in validos_seguridad if cumple_umbral(c)]
@@ -597,6 +701,7 @@ def generar_para_perfil(client, repertorio, textos_corpus_gold, nombre, caracter
         "seleccionados": seleccionados,
         "rondas_usadas": rondas_usadas,
         "usage_total": usage_total,
+        "senales_descartadas_seguridad": list(senales_descartadas.keys()),
     }
 
 
@@ -620,7 +725,6 @@ def imprimir_resultado_perfil(nombre_perfil, entrada, resultado):
     print(f"\nTOP {len(resultado['seleccionados'])} FINALISTAS:")
     for i, c in enumerate(resultado["seleccionados"], start=1):
         print(f"\n  [{i}] \"{c['chapa']}\"")
-        print(f"      cadena_asociativa: {c.get('cadena_asociativa', '')}")
         print(f"      señal_utilizada: {c['senal_utilizada']}   operación: {c['operacion']}   "
               f"dominio: {c['dominio_semantico_principal']}")
         print(f"      patrón_estructural: {c['patron_estructural']}")
@@ -651,18 +755,19 @@ def ejecutar_perfil_cli():
     parser.add_argument("--caracteristica", required=True)
     parser.add_argument("--costumbre", required=True)
     parser.add_argument("--objeto", required=True)
+    parser.add_argument("--sexo", choices=["hombre", "mujer", "no_indica"], default="no_indica")
     args = parser.parse_args()
 
     repertorio, n_usables = cargar_repertorio_generativo()
     textos_corpus_gold = cargar_corpus_gold_textos()
-    print(f"Repertorio (para el juez): {n_usables} filas habilitadas, {len(repertorio)} operaciones.", file=sys.stderr)
+    print(f"Repertorio generativo: {n_usables} filas habilitadas, {len(repertorio)} operaciones.", file=sys.stderr)
 
     api_key = cargar_api_key()
     client = OpenAI(api_key=api_key)
 
     resultado = generar_para_perfil(
         client, repertorio, textos_corpus_gold,
-        args.nombre, args.caracteristica, args.costumbre, args.objeto,
+        args.nombre, args.caracteristica, args.costumbre, args.objeto, sexo=args.sexo,
         guardar_raw_en=OUTPUT_DIR / "ultima_generacion_raw.json",
     )
 
@@ -670,7 +775,7 @@ def ejecutar_perfil_cli():
     imprimir_resultado_perfil(args.nombre, entrada, resultado)
 
     u = resultado["usage_total"]
-    print(f"\nModelos: generación={MODEL_GENERACION} juez={MODEL_JUEZ}  |  Tokens: prompt={u['prompt_tokens']} "
+    print(f"\nModelo: {MODEL}  |  Tokens: prompt={u['prompt_tokens']} "
           f"completion={u['completion_tokens']} total={u['total_tokens']}")
 
 
