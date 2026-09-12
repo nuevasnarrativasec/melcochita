@@ -1,0 +1,14 @@
+id,categoria,ambito,tipo,patron,accion,razon
+R001,ORIENTACION_SEXUAL,todos,regex,\b(gay|lesbiana|homosexual|bisexual|maricon|marica|cabro)\b,BLOQUEAR,No usar orientación sexual como material de burla.
+R002,IDENTIDAD_GENERO,todos,regex,\b(transgenero|transexual|travesti)\b,BLOQUEAR,No usar identidad de género como material de burla.
+R003,ORIENTACION_SEXUAL_CODIFICADA,todos,regex,\bde ambiente\b,BLOQUEAR,Evita expresiones históricamente usadas como alusión codificada a orientación sexual.
+R004,NACIONALIDAD_ORIGEN,todos,regex,\b(gringo|gringa|gringos|gringas|japones|japonesa|japoneses|chino|china|chinos|chinas|venezolano|venezolana|boliviano|boliviana|chileno|chilena|ecuatoriano|ecuatoriana)\b,BLOQUEAR,Evita convertir nacionalidad u origen en el remate del apodo.
+R005,DISCAPACIDAD,todos,regex,\b(discapacit\w*|invalido|invalida|retrasad\w*|mongol\w*|autista|autismo)\b,BLOQUEAR,No usar discapacidad o neurodivergencia como insulto.
+R006,RELIGION_IDENTIDAD,todos,regex,\b(cristiano|cristiana|musulman|musulmana|judio|judia|ateo|atea)\b,BLOQUEAR,No usar identidad religiosa o ausencia de religión como objeto de burla.
+R007,SALUD_CONDICION_MEDICA,todos,regex,\b(cancer|sida|vih|enfermo terminal|enferma terminal)\b,BLOQUEAR,No usar enfermedades o condiciones médicas como remate.
+R008,VIOLENCIA_GORE,todos,regex,\b(destripador|destripad\w*|degollad\w*|acuchillad\w*|balazo\w*|asesin\w*|matar|matado|matada|sangr\w*)\b,BLOQUEAR,Evita violencia gráfica o extrema.
+R009,VIOLENCIA_FISICA,todos,regex,\b(cachetada\w*|golpead\w*|puñetazo\w*|patada\w*)\b,BLOQUEAR,Evita agresión física como base del chiste.
+R010,SEXUALIZACION,todos,regex,\b(sexo|sexual|prostitut\w*|puta|puto|pezon\w*|teta\w*|pene\w*|vagina\w*|cachad\w*)\b,BLOQUEAR,Evita contenido sexual explícito o degradante.
+R011,SEXUALIZACION_CODIFICADA,todos,regex,\b(la pisan|le metes una moneda|todas la han tenido|monta con plata)\b,BLOQUEAR,Bloquea frases del corpus asociadas a sexualización/objetificación.
+R012,BODY_SHAMING,todos,regex,\b(gordo|gorda|gordazo|gordaza|obeso|obesa)\b,BLOQUEAR,Evita burla directa basada en peso corporal.
+R013,EDADISMO,todos,regex,\b(viejo|vieja|anciano|anciana)\b,BLOQUEAR,Evita usar edad de forma peyorativa en una chapa dirigida a una persona.

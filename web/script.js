@@ -122,6 +122,7 @@ function reiniciarFeedbackUI() {
 function leerDatosFormulario() {
   return {
     nombre_o_apodo: document.getElementById("nombre_o_apodo").value.trim(),
+    sexo: document.getElementById("sexo").value, // solo concordancia (motor v3)
     caracteristica: document.getElementById("caracteristica").value.trim(),
     costumbre: document.getElementById("costumbre").value.trim(),
     objeto_que_siempre_usa: document.getElementById("objeto_que_siempre_usa").value.trim(),
@@ -150,7 +151,9 @@ async function solicitarChapa(datos, origen) {
     const respuesta = await fetch("/generar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...datos, origen }),
+      // ultima_chapa: la última mostrada, para que el motor v3 no repita
+      // inmediatamente la misma chapa original al pedir "otra chapa".
+      body: JSON.stringify({ ...datos, origen, ultima_chapa: textoChapa.textContent || "" }),
     });
 
     if (!respuesta.ok) {
