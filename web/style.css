@@ -202,9 +202,8 @@ button:disabled {
 
 .btn-secundario {
   background: #ffffff;
-  color: #b3401f;
-  border: 2px solid #b3401f;
-  font-size: 0.95rem;
+  color: #000;
+  font-size: 1.3rem;
 }
 
 .btn-secundario:hover:not(:disabled) {
@@ -219,28 +218,26 @@ button:disabled {
 
 #texto-cargando {
   margin: 0;
-  font-size: 1.2rem;
-  color: #b3401f;
-  font-weight: 700;
+  font: 2rem/1.1 'LiquidAmber';
+  color: #F5E30D;
 }
 
 /* ---- Resultado ---- */
 .etiqueta-resultado {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b6255;
-  font-weight: 700;
+  color: #F5E30D;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   text-align: center;
+  display: none;
 }
 
 .texto-chapa {
   font-size: 2rem;
-  font-weight: 800;
-  line-height: 1.2;
+  font: 2.5rem/1.1 'LiquidAmber';
   margin: 8px 0 6px 0;
-  color: #241d15;
+  color: #F5E30D;
   text-align: center;
   text-transform: uppercase;
 }
@@ -248,10 +245,8 @@ button:disabled {
 .remate {
   margin: 0 0 6px 0;
   text-align: center;
-  font-size: 0.95rem;
-  font-style: italic;
-  color: #b3401f;
-  font-weight: 600;
+  font: 1.5rem/1.1 'LiquidAmber';
+  color: #F5E30D;
 }
 
 .fila-feedback {
@@ -267,7 +262,7 @@ button:disabled {
   background: #ffffff;
   color: #241d15;
   border: 1px solid #d8d2c4;
-  font-size: 0.88rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -276,8 +271,7 @@ button:disabled {
 }
 
 .btn-feedback.votado {
-  border-color: #b3401f;
-  color: #b3401f;
+  color: #000;
 }
 
 .mensaje-feedback {
