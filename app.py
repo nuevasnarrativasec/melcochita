@@ -379,5 +379,14 @@ if AUDIO_CARGA_DIR.is_dir():
 else:
     logger.warning("No se encontró la carpeta de audios de carga: %s", AUDIO_CARGA_DIR)
 
+# Intros pregrabados con la voz REAL de Melcochita ("Mi querido…", "Oye…")
+# servidos en /audio-intro -> carpeta frases-intro-chapa/. El frontend los
+# reproduce antes de la chapa. Antes del catch-all "/".
+AUDIO_INTRO_DIR = PROJECT_ROOT / "frases-intro-chapa"
+if AUDIO_INTRO_DIR.is_dir():
+    app.mount("/audio-intro", StaticFiles(directory=AUDIO_INTRO_DIR), name="audio-intro")
+else:
+    logger.warning("No se encontró la carpeta de intros: %s", AUDIO_INTRO_DIR)
+
 # Rutas API primero; el frontend estático se monta al final en "/".
 app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
