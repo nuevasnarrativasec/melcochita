@@ -1,8 +1,6 @@
 // Melcochómetro — frontend mínimo (sin framework, sin dependencias externas).
-// Nunca maneja ni ve la API key de OpenAI: solo llama a POST /generar y
-// POST /feedback en el mismo origen. Nunca muestra scoring, patrón,
-// operación, prompts, candidatos internos ni información del corpus.
-// No usa cookies de seguimiento ni pide datos personales.
+// Nunca maneja ni ve la API key de OpenAI: solo llama a POST /generar, /voz y
+// /feedback en el mismo origen. No usa cookies de seguimiento.
 
 const form = document.getElementById("form-chapa");
 const btnGenerar = document.getElementById("btn-generar");
@@ -27,13 +25,10 @@ const btnCompartir = document.getElementById("btn-compartir");
 
 let ultimosDatos = null;
 let enVuelo = false;
-let _audioMelco = null; // último audio de la voz de Melcochita
-let _blobMelco = null;  // el MP3 de la chapa, para compartir/descargar
+let _blobMelco = null; // MP3 de la chapa (para compartir/descargar)
+let _urlChapa = null;  // objectURL de la chapa (para re-escuchar)
 
-// --- Mensajes de carga (progresión lúdica mientras Melcochita "piensa") ---
-// Cada frase tiene su audio con la voz de Melcochita; el texto avanza a la
-// siguiente frase cuando termina su audio (quedándose en la última mientras
-// siga cargando). El orden de AUDIOS_CARGA calza con MENSAJES_CARGA.
+// --- Frases de carga (mientras Melcochita "piensa") ---
 const MENSAJES_CARGA = [
   "Analizando a la víctima...",
   "Uy, ya le encontré algo...",
@@ -42,7 +37,7 @@ const MENSAJES_CARGA = [
 ];
 const MENSAJE_REVELACION = "Ya salió, ¡imbécil!";
 
-const AUDIO_CARGA_DIR = "audio-carga"; // servido por app.py (ver README)
+const AUDIO_CARGA_DIR = "audio-carga";
 const AUDIOS_CARGA = [
   "analizando-a-la-victima.mp3",
   "uy-ya-le-encontre-algo.mp3",
@@ -51,69 +46,106 @@ const AUDIOS_CARGA = [
 ];
 const AUDIO_REVELACION_FILE = "ya-salio-imbecil.mp3";
 
-// Intros PREGRABADOS con la voz real de Melcochita, servidos en /audio-intro.
-// Se reproduce uno al azar ANTES de la chapa (que se sintetiza sin marco).
+// Intros PREGRABADOS con la voz real de Melcochita (servidos en /audio-intro).
 const AUDIO_INTRO_DIR = "audio-intro";
 const AUDIOS_INTRO = [
   "frase-mi-querido.mp3",
   "frase-fuera-oye.mp3",
 ];
 
-let _cargaTimer = null;   // fallback por tiempo si el audio no puede sonar
-let _audioCarga = null;   // audio de la frase de carga en curso
+// ======================================================================
+// Reproductor de audio ÚNICO — clave para iOS.
+// iOS solo deja sonar audio en un elemento "desbloqueado" por un gesto del
+// usuario. Usamos UN SOLO <audio> para TODA la secuencia (carga → revelación
+// → intro → chapa). Su PRIMERA reproducción ocurre dentro del clic (submit),
+// lo que desbloquea el elemento para el resto de clips, aunque lleguen
+// después de esperas asíncronas (fetch). Crear un Audio nuevo por clip —como
+// antes— hacía que iOS bloqueara todo lo posterior al gesto.
+// ======================================================================
+const reproductor = new Audio();
+reproductor.preload = "auto";
+reproductor.setAttribute("playsinline", "");
+let _resolverClip = null;
+
+function _reproducir(src) {
+  // Si había un clip en curso esperando, lo resolvemos (cambio de clip).
+  if (_resolverClip) { const r = _resolverClip; _resolverClip = null; r(); }
+  return new Promise((resolve) => {
+    _resolverClip = resolve;
+    const finalizar = () => {
+      if (_resolverClip === resolve) { _resolverClip = null; resolve(); }
+    };
+    reproductor.onended = finalizar;
+    try {
+      reproductor.src = src;
+      reproductor.currentTime = 0;
+      const p = reproductor.play();
+      if (p && p.catch) p.catch(finalizar); // bloqueado/errores: seguimos igual
+    } catch (_) {
+      finalizar();
+    }
+  });
+}
+
+function _detenerReproductor() {
+  try { reproductor.pause(); } catch (_) {}
+  reproductor.onended = null;
+  if (_resolverClip) { const r = _resolverClip; _resolverClip = null; r(); }
+}
+
+// --- Secuencia de carga (frases + audio) ---
 let _cargando = false;
 
-function _detenerAudioCarga() {
-  if (_audioCarga) {
-    _audioCarga.onended = null;
-    try { _audioCarga.pause(); } catch (_) {}
-    _audioCarga = null;
+async function iniciarMensajesCarga() {
+  // OJO: se llama SIN await desde el gesto de submit; su primer _reproducir
+  // se ejecuta sincrónicamente dentro del clic y desbloquea el audio en iOS.
+  _cargando = true;
+  for (let i = 0; i < MENSAJES_CARGA.length; i++) {
+    if (!_cargando) return;
+    textoCargando.textContent = MENSAJES_CARGA[i];
+    await _reproducir(`${AUDIO_CARGA_DIR}/${AUDIOS_CARGA[i]}`);
   }
+  // Se acabaron las frases pero sigue generando: queda la última en pantalla.
+  if (_cargando) textoCargando.textContent = MENSAJES_CARGA[MENSAJES_CARGA.length - 1];
 }
 
 function detenerMensajesCarga() {
   _cargando = false;
-  if (_cargaTimer) {
-    clearInterval(_cargaTimer);
-    _cargaTimer = null;
+  _detenerReproductor();
+}
+
+// --- Secuencia de revelación: "¡Ya salió!" → intro grabado → chapa ---
+async function secuenciaRevelacion(texto) {
+  await _reproducir(`${AUDIO_CARGA_DIR}/${AUDIO_REVELACION_FILE}`);
+  if (AUDIOS_INTRO.length) {
+    const archivo = AUDIOS_INTRO[Math.floor(Math.random() * AUDIOS_INTRO.length)];
+    await _reproducir(`${AUDIO_INTRO_DIR}/${archivo}`);
   }
-  _detenerAudioCarga();
+  await reproducirChapa(texto);
 }
 
-// Fallback sin audio: cicla el texto por tiempo (comportamiento original).
-function _ciclarTextoPorTiempo() {
-  if (_cargaTimer) return;
-  let i = 0;
-  textoCargando.textContent = MENSAJES_CARGA[0];
-  _cargaTimer = setInterval(() => {
-    i = Math.min(i + 1, MENSAJES_CARGA.length - 1);
-    textoCargando.textContent = MENSAJES_CARGA[i];
-  }, 1200);
-}
-
-// Muestra la frase i con su audio; al terminar el audio avanza a la
-// siguiente. Si el navegador bloquea el audio, cae al ciclo por tiempo.
-function _reproducirFraseCarga(i) {
-  if (!_cargando) return;
-  textoCargando.textContent = MENSAJES_CARGA[i];
-  _detenerAudioCarga();
-  const a = new Audio(`${AUDIO_CARGA_DIR}/${AUDIOS_CARGA[i]}`);
-  _audioCarga = a;
-  a.onended = () => {
-    if (!_cargando) return;
-    if (i < MENSAJES_CARGA.length - 1) _reproducirFraseCarga(i + 1);
-    // en la última frase se queda en pantalla hasta la revelación
-  };
-  a.play().catch(() => {
-    _detenerAudioCarga();
-    _ciclarTextoPorTiempo();
-  });
-}
-
-function iniciarMensajesCarga() {
-  detenerMensajesCarga();
-  _cargando = true;
-  _reproducirFraseCarga(0);
+// --- Voz de la chapa (pedida a /voz, PELADA: el "Mi querido" lo da el intro) ---
+async function reproducirChapa(texto) {
+  if (btnEscuchar) btnEscuchar.hidden = true;
+  if (btnCompartir) btnCompartir.hidden = true;
+  _blobMelco = null;
+  if (_urlChapa) { URL.revokeObjectURL(_urlChapa); _urlChapa = null; }
+  try {
+    const r = await fetch("/voz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto }),
+    });
+    if (!r.ok) return; // sin audio (p.ej. voz no configurada): la chapa se ve igual
+    const blob = await r.blob();
+    _blobMelco = blob;
+    _urlChapa = URL.createObjectURL(blob);
+    if (btnEscuchar) btnEscuchar.hidden = false;
+    if (btnCompartir) btnCompartir.hidden = false;
+    await _reproducir(_urlChapa); // mismo elemento ya desbloqueado
+  } catch (err) {
+    /* el audio es un plus; nunca interrumpe la experiencia */
+  }
 }
 
 function mostrarSolo(el) {
@@ -155,14 +187,13 @@ async function solicitarChapa(datos, origen) {
   if (enVuelo) return;
   enVuelo = true;
   mostrarSolo(estadoCargando);
-  iniciarMensajesCarga();
+  iniciarMensajesCarga(); // fire-and-forget: primer audio en-gesto (desbloquea iOS)
 
   try {
     const respuesta = await fetch("/generar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // ultima_chapa: la última mostrada, para que el motor v3 no repita
-      // inmediatamente la misma chapa original al pedir "otra chapa".
+      // ultima_chapa: para que el motor v3 no repita la misma chapa original.
       body: JSON.stringify({ ...datos, origen, ultima_chapa: textoChapa.textContent || "" }),
     });
 
@@ -172,28 +203,16 @@ async function solicitarChapa(datos, origen) {
 
     const data = await respuesta.json();
 
-    // Remate de la carga: suena "¡Ya salió, imbécil!" con su audio y, al
-    // terminar ese audio, arranca la voz de la chapa (para que no se pisen).
     detenerMensajesCarga();
     textoCargando.textContent = MENSAJE_REVELACION;
+    secuenciaRevelacion(data.chapa); // fire-and-forget: "¡Ya salió!" → intro → chapa
 
-    let chapaDisparada = false;
-    const dispararChapa = () => {
-      if (chapaDisparada) return;
-      chapaDisparada = true;
-      reproducirIntroYChapa(data.chapa); // intro grabado -> chapa (voz de Melcochita)
-    };
-    const revelacion = new Audio(`${AUDIO_CARGA_DIR}/${AUDIO_REVELACION_FILE}`);
-    revelacion.onended = dispararChapa;
-    revelacion.play().catch(dispararChapa); // si no puede sonar, va directo la chapa
-
-    await new Promise((r) => setTimeout(r, 700));
+    await new Promise((r) => setTimeout(r, 600)); // beat dramático antes de mostrar
 
     textoChapa.textContent = data.chapa;
     reiniciarFeedbackUI();
     mostrarSolo(tarjetaResultado);
   } catch (err) {
-    // Nunca se muestra el detalle técnico al usuario.
     detenerMensajesCarga();
     mostrarSolo(tarjetaError);
   } finally {
@@ -201,83 +220,38 @@ async function solicitarChapa(datos, origen) {
   }
 }
 
-// --- Intro pregrabado (voz real) + chapa (voz clonada) ---
-// Reproduce un intro al azar ("Mi querido…" / "Oye…") con la voz REAL de
-// Melcochita y, al terminar, la chapa. Si el intro no puede sonar o no hay
-// intros, pasa directo a la chapa.
-function reproducirIntroYChapa(texto) {
-  if (!AUDIOS_INTRO.length) {
-    reproducirVoz(texto);
-    return;
-  }
-  const archivo = AUDIOS_INTRO[Math.floor(Math.random() * AUDIOS_INTRO.length)];
-  const intro = new Audio(`${AUDIO_INTRO_DIR}/${archivo}`);
-  let seguido = false;
-  const seguir = () => {
-    if (seguido) return;
-    seguido = true;
-    reproducirVoz(texto);
-  };
-  intro.onended = seguir;
-  intro.play().catch(seguir); // si el navegador bloquea el intro, va directo la chapa
-}
-
-// --- Voz de Melcochita (la chapa) ---
-// Pide a /voz el audio de la chapa (hoy PELADA: el "Mi querido…" lo pone el
-// intro grabado de arriba). Es un plus: si algo falla, la chapa se ve igual
-// y no se rompe nada. En pantalla siempre se muestra la chapa pelada.
-async function reproducirVoz(texto) {
-  if (btnEscuchar) btnEscuchar.hidden = true;
-  if (btnCompartir) btnCompartir.hidden = true;
-  _blobMelco = null;
-  try {
-    const r = await fetch("/voz", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto }),
-    });
-    if (!r.ok) return; // sin audio (p.ej. voz no configurada): la chapa se ve igual
-    const blob = await r.blob();
-    _blobMelco = blob;
-    if (_audioMelco) URL.revokeObjectURL(_audioMelco.src);
-    _audioMelco = new Audio(URL.createObjectURL(blob));
-    if (btnEscuchar) btnEscuchar.hidden = false;
-    if (btnCompartir) btnCompartir.hidden = false;
-    _audioMelco.play().catch(() => {}); // si el navegador bloquea autoplay, queda el botón
-  } catch (err) {
-    /* el audio es opcional; nunca interrumpe la experiencia */
-  }
-}
-
 if (btnEscuchar) {
   btnEscuchar.addEventListener("click", () => {
-    if (_audioMelco) _audioMelco.play();
+    if (_urlChapa) _reproducir(_urlChapa);
   });
 }
 
 // --- Compartir la chapa en audio ---
-// En móvil usa la Web Share API (WhatsApp, etc.) con el MP3 adjunto; en
-// escritorio (o si no hay soporte) cae a descargar el audio. Comparte
-// además un enlace de vuelta al Melcochómetro para que corra la voz.
+// Móvil: compartir nativo con el MP3 adjunto (el enlace va DENTRO del texto,
+// sin el campo `url` aparte, que hace colgar a WhatsApp). Escritorio: descarga.
 async function compartirChapa() {
   if (!_blobMelco) return;
-  const nombreArchivo = "melcochita.mp3";
-  const archivo = new File([_blobMelco], nombreArchivo, { type: "audio/mpeg" });
-  const texto = `Melcochita me chapó: "${textoChapa.textContent}" 😂 Hazte el tuyo:`;
-  const url = window.location.origin;
+  const archivo = new File([_blobMelco], "melcochita.mp3", { type: "audio/mpeg" });
+  const enlace = window.location.origin;
+  const texto = `Melcochita me chapó: "${textoChapa.textContent}" 😂 Hazte el tuyo: ${enlace}`;
 
-  if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+  const esTactil = (navigator.maxTouchPoints || 0) > 0 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const puedeArchivo = navigator.canShare && navigator.canShare({ files: [archivo] });
+
+  if (esTactil && puedeArchivo) {
     try {
-      await navigator.share({ files: [archivo], text: texto, url });
+      await navigator.share({ files: [archivo], text: texto });
       return;
     } catch (err) {
       if (err && err.name === "AbortError") return; // el usuario canceló
+      // cualquier otro error: caemos a descarga
     }
   }
-  // Fallback: descargar el MP3.
+
+  // Escritorio o sin soporte de compartir archivos: descargar el MP3.
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(_blobMelco);
-  a.download = nombreArchivo;
+  a.href = _urlChapa || URL.createObjectURL(_blobMelco);
+  a.download = "melcochita.mp3";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -288,8 +262,7 @@ if (btnCompartir) {
 }
 
 async function enviarFeedback(valor) {
-  // "Fire and forget": no bloquea la interfaz ni depende de la respuesta.
-  // No se envía la chapa ni ningún dato del formulario, solo el voto.
+  // "Fire and forget": no bloquea ni depende de la respuesta.
   try {
     await fetch("/feedback", {
       method: "POST",
@@ -297,7 +270,7 @@ async function enviarFeedback(valor) {
       body: JSON.stringify({ valor }),
     });
   } catch (err) {
-    // Silencioso: el feedback es opcional y no debe interrumpir la experiencia.
+    /* el feedback es opcional; no interrumpe la experiencia */
   }
 }
 
@@ -366,10 +339,6 @@ btnNoMeGusta.addEventListener("click", () => {
 });
 
 // --- Auto-alto cuando el Melcochómetro va embebido en un iframe ---
-// Si la página corre dentro de un iframe (landing de El Comercio), le
-// avisa a la página contenedora su altura real para que el iframe crezca
-// o encoja según el estado (formulario / cargando / resultado), sin scroll
-// interno ni espacios vacíos. En uso normal (no embebido) no hace nada.
 if (window.parent && window.parent !== window) {
   const _postAlto = () => {
     const alto = Math.ceil(document.documentElement.scrollHeight);
@@ -379,6 +348,6 @@ if (window.parent && window.parent !== window) {
   if (window.ResizeObserver) {
     new ResizeObserver(_postAlto).observe(document.body);
   } else {
-    setInterval(_postAlto, 500); // fallback para navegadores viejos
+    setInterval(_postAlto, 500);
   }
 }
