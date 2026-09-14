@@ -227,20 +227,19 @@ if (btnEscuchar) {
 }
 
 // --- Compartir la chapa en audio ---
-// Móvil: compartir nativo con el MP3 adjunto (el enlace va DENTRO del texto,
-// sin el campo `url` aparte, que hace colgar a WhatsApp). Escritorio: descarga.
+// Móvil: compartir SOLO el archivo de audio (sin texto ni url). WhatsApp en
+// iOS se cuelga si el share mezcla archivo + texto/link; mandando solo el
+// archivo es lo más compatible. Escritorio: descargar el MP3.
 async function compartirChapa() {
   if (!_blobMelco) return;
   const archivo = new File([_blobMelco], "melcochita.mp3", { type: "audio/mpeg" });
-  const enlace = window.location.origin;
-  const texto = `Melcochita me chapó: "${textoChapa.textContent}" 😂 Hazte el tuyo: ${enlace}`;
 
   const esTactil = (navigator.maxTouchPoints || 0) > 0 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   const puedeArchivo = navigator.canShare && navigator.canShare({ files: [archivo] });
 
   if (esTactil && puedeArchivo) {
     try {
-      await navigator.share({ files: [archivo], text: texto });
+      await navigator.share({ files: [archivo] }); // solo el archivo: máxima compatibilidad
       return;
     } catch (err) {
       if (err && err.name === "AbortError") return; // el usuario canceló
