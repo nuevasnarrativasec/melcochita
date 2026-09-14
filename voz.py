@@ -128,7 +128,13 @@ def sintetizar_chapa(chapa: str, marco: Optional[str] = None) -> bytes:
     if not api_key or not voice_id:
         raise VozNoConfigurada("Falta ELEVENLABS_API_KEY o MELCOCHITA_VOICE_ID.")
 
-    frase = enmarcar(chapa, marco)
+    # Por defecto NO se añade el marco ("Mi querido…"): ahora ese arranque
+    # lo dan los intros PREGRABADOS con la voz real de Melcochita que el
+    # frontend reproduce antes de la chapa. Así no se dice dos veces y se
+    # sintetiza solo la chapa pelada (más corta = menos créditos). Para
+    # volver al marco sintetizado, poner VOZ_CON_MARCO=true en el .env.
+    con_marco = os.environ.get("VOZ_CON_MARCO", "false").lower() in ("1", "true", "yes", "si", "sí")
+    frase = enmarcar(chapa, marco) if con_marco else chapa.strip().strip(".!¡ ").strip()
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
     ruta = _CACHE_DIR / f"{_clave_cache(voice_id, model_id, frase)}.mp3"
     if ruta.exists():

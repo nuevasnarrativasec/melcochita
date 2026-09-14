@@ -23,10 +23,12 @@ const btnNoMeGusta = document.getElementById("btn-no-me-gusta");
 const mensajeFeedback = document.getElementById("mensaje-feedback");
 
 const btnEscuchar = document.getElementById("btn-escuchar");
+const btnCompartir = document.getElementById("btn-compartir");
 
 let ultimosDatos = null;
 let enVuelo = false;
 let _audioMelco = null; // último audio de la voz de Melcochita
+let _blobMelco = null;  // el MP3 de la chapa, para compartir/descargar
 
 // --- Mensajes de carga (progresión lúdica mientras Melcochita "piensa") ---
 // Cada frase tiene su audio con la voz de Melcochita; el texto avanza a la
@@ -48,6 +50,14 @@ const AUDIOS_CARGA = [
   "esto-se-esta-poniendo-feo.mp3",
 ];
 const AUDIO_REVELACION_FILE = "ya-salio-imbecil.mp3";
+
+// Intros PREGRABADOS con la voz real de Melcochita, servidos en /audio-intro.
+// Se reproduce uno al azar ANTES de la chapa (que se sintetiza sin marco).
+const AUDIO_INTRO_DIR = "audio-intro";
+const AUDIOS_INTRO = [
+  "frase-mi-querido.mp3",
+  "frase-fuera-oye.mp3",
+];
 
 let _cargaTimer = null;   // fallback por tiempo si el audio no puede sonar
 let _audioCarga = null;   // audio de la frase de carga en curso
@@ -171,7 +181,7 @@ async function solicitarChapa(datos, origen) {
     const dispararChapa = () => {
       if (chapaDisparada) return;
       chapaDisparada = true;
-      reproducirVoz(data.chapa); // la voz de Melcochita, con su marco discursivo
+      reproducirIntroYChapa(data.chapa); // intro grabado -> chapa (voz de Melcochita)
     };
     const revelacion = new Audio(`${AUDIO_CARGA_DIR}/${AUDIO_REVELACION_FILE}`);
     revelacion.onended = dispararChapa;
@@ -191,13 +201,35 @@ async function solicitarChapa(datos, origen) {
   }
 }
 
-// --- Voz de Melcochita ---
-// Pide a /voz el audio de la chapa (el backend le pone el marco "Mi
-// querido…") y lo reproduce. Es un plus: si algo falla, la chapa se ve
-// igual y no se rompe nada. En pantalla siempre se muestra la chapa
-// pelada; lo que suena es la versión enmarcada.
+// --- Intro pregrabado (voz real) + chapa (voz clonada) ---
+// Reproduce un intro al azar ("Mi querido…" / "Oye…") con la voz REAL de
+// Melcochita y, al terminar, la chapa. Si el intro no puede sonar o no hay
+// intros, pasa directo a la chapa.
+function reproducirIntroYChapa(texto) {
+  if (!AUDIOS_INTRO.length) {
+    reproducirVoz(texto);
+    return;
+  }
+  const archivo = AUDIOS_INTRO[Math.floor(Math.random() * AUDIOS_INTRO.length)];
+  const intro = new Audio(`${AUDIO_INTRO_DIR}/${archivo}`);
+  let seguido = false;
+  const seguir = () => {
+    if (seguido) return;
+    seguido = true;
+    reproducirVoz(texto);
+  };
+  intro.onended = seguir;
+  intro.play().catch(seguir); // si el navegador bloquea el intro, va directo la chapa
+}
+
+// --- Voz de Melcochita (la chapa) ---
+// Pide a /voz el audio de la chapa (hoy PELADA: el "Mi querido…" lo pone el
+// intro grabado de arriba). Es un plus: si algo falla, la chapa se ve igual
+// y no se rompe nada. En pantalla siempre se muestra la chapa pelada.
 async function reproducirVoz(texto) {
   if (btnEscuchar) btnEscuchar.hidden = true;
+  if (btnCompartir) btnCompartir.hidden = true;
+  _blobMelco = null;
   try {
     const r = await fetch("/voz", {
       method: "POST",
@@ -206,9 +238,11 @@ async function reproducirVoz(texto) {
     });
     if (!r.ok) return; // sin audio (p.ej. voz no configurada): la chapa se ve igual
     const blob = await r.blob();
+    _blobMelco = blob;
     if (_audioMelco) URL.revokeObjectURL(_audioMelco.src);
     _audioMelco = new Audio(URL.createObjectURL(blob));
     if (btnEscuchar) btnEscuchar.hidden = false;
+    if (btnCompartir) btnCompartir.hidden = false;
     _audioMelco.play().catch(() => {}); // si el navegador bloquea autoplay, queda el botón
   } catch (err) {
     /* el audio es opcional; nunca interrumpe la experiencia */
@@ -219,6 +253,38 @@ if (btnEscuchar) {
   btnEscuchar.addEventListener("click", () => {
     if (_audioMelco) _audioMelco.play();
   });
+}
+
+// --- Compartir la chapa en audio ---
+// En móvil usa la Web Share API (WhatsApp, etc.) con el MP3 adjunto; en
+// escritorio (o si no hay soporte) cae a descargar el audio. Comparte
+// además un enlace de vuelta al Melcochómetro para que corra la voz.
+async function compartirChapa() {
+  if (!_blobMelco) return;
+  const nombreArchivo = "melcochita.mp3";
+  const archivo = new File([_blobMelco], nombreArchivo, { type: "audio/mpeg" });
+  const texto = `Melcochita me chapó: "${textoChapa.textContent}" 😂 Hazte el tuyo:`;
+  const url = window.location.origin;
+
+  if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+    try {
+      await navigator.share({ files: [archivo], text: texto, url });
+      return;
+    } catch (err) {
+      if (err && err.name === "AbortError") return; // el usuario canceló
+    }
+  }
+  // Fallback: descargar el MP3.
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(_blobMelco);
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+if (btnCompartir) {
+  btnCompartir.addEventListener("click", compartirChapa);
 }
 
 async function enviarFeedback(valor) {
