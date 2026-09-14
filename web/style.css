@@ -136,11 +136,12 @@ label {
 input[type="text"],
 select {
   padding: 10px 12px;
-  border: 1px solid #d8d2c4;
+  border: none;
   border-radius: 8px;
   font-size: 1rem;
   width: 100%;
-  background: #fff;
+  color: #fff;
+  background: #313131;
 }
 
 input[type="text"]:focus,
@@ -181,14 +182,17 @@ select:focus {
 }
 
 button {
-  margin-top: 4px;
-  padding: 14px 16px;
-  border: none;
-  border-radius: 8px;
-  background: #F5E30D;
-  color: #000;
-  cursor: pointer;
-  font: 2rem/1.1 'LiquidAmber';
+    padding: 14px 16px;
+    border: none;
+    background: #F5E30D;
+    color: #000;
+    cursor: pointer;
+    font: 2rem / 1.1 'LiquidAmber';
+    max-width: 250px;
+    border-radius: 36px;
+    display: block;
+    margin: 0 auto;
+    width: 100%;
 }
 
 button:hover:not(:disabled) {
