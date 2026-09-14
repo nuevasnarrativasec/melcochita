@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+    <div class="hero">
+        <h1>
+            Melcochometro
+        </h1>
+        <div class="box-botones-portada">
+            <div class="btn-portada" id="btn-portada-1">
+                <a href="#">el sonero llegó</a>
+            </div>
+            <div class="btn-portada" id="btn-portada-2">
+                <a href="#">melcochea a tu pata</a>
+            </div>
+            <div class="btn-portada" id="btn-portada-3">
+                <a href="#">habla bien</a>
+            </div>
+        </div>
+        <div class="box-cta">
+            Desliza para interactuar
+            <i></i>
+        </div>
+        <video src="./video/video-portada.mp4" autoplay muted width="100%" height="100%"></video>
+    </div>
+
+    <div class="main-conoce">
+        <div class="ctn-conoce">
+            <img src="./img/ilus-90-anos.png" alt="90 años" width="100%" class="ilus-1">
+            <p>
+                A lo largo de más de ocho décadas de carrera, <span>Pablo Villanueva “Melcochita”</span> ha hecho de la versatilidad su sello. Música, humor, televisión y cine forman parte de una trayectoria marcada por una personalidad inconfundible, una extraordinaria capacidad para improvisar y un talento que convirtió su picardía, sus frases y sus chapas en parte de la memoria popular peruana. Su nombre, además, trascendió fronteras y llegó a escenarios internacionales.
+            </p>
+            <h3>
+                conoce a pablo villanueva
+            </h3>
+            <ul>
+                <li>
+                    <img src="../landing/img/elipse.png" alt="" width="100%">
+                    <h4>Música desde niño</h4>
+                    <p>
+                        Su vocación musical comenzó en la infancia. A los seis años integró Son de Aruba y, más adelante, formó con sus hermanos Son Cubillas, donde empezó a consolidarse como percusionista y cantante.
+                    </p>
+                </li>
+                <li>
+                    <img src="../landing/img/elipse.png" alt="" width="100%">
+                    <h4>Con los grandes</h4>
+                    <p>
+                        Como sonero compartió escenarios con figuras como Celia Cruz, Johnny Pacheco, Tito Puente y Willie Colón. También grabó para Fania Records y llevó su música a distintos países.
+                    </p>
+                </li>
+                <li>
+                    <img src="../landing/img/elipse.png" alt="" width="100%">
+                    <h4>Su verdadera pasión</h4>
+                    <p>
+                        Aunque en el Perú se hizo masivamente conocido por la comicidad, Melcochita siempre ha dicho que su verdadera pasión es la música. Ha grabado alrededor de 75 temas de salsa.
+                    </p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-discografia">
+        <div class="ctn-discografia">
+
+            <h2 class="titulo-escucha">
+                <img src="./img/titulo-escucha.png" alt="¡Escucha bien!">
+            </h2>
+
+            <ul class="disco-legend">
+                <li>
+                    <span class="leg-ico leg-drag">
+                        <img src="./img/icon-deslizar.png" alt="">
+                    </span>
+                    Desliza para interactuar
+                </li>
+                <li>
+                    <span class="leg-ico leg-play">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                    </span>
+                    Selecciona para reproducir álbum
+                </li>
+            </ul>
+
+            <div class="disco-carousel">
+                <button class="disco-arrow prev" type="button" aria-label="Álbum anterior">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8"/></svg>
+                </button>
+
+                <div class="disco-track" id="discoTrack"></div>
+
+                <button class="disco-arrow next" type="button" aria-label="Álbum siguiente">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8"/></svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="main-melcochometro">
+        <div class="ctn-melcochometro">
+            <img src="../landing/img/ilus-melcochometro.png" alt="melcochita" width="100%" class="ilus-melcochometro">
+            
+            <div class="box-embed-melcochometro">
+                <h4>melcochea a tu pata</h4>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+    <script src="./js/discografia.js" defer></script>
+    
+</body>
+</html>
