@@ -8,29 +8,38 @@
 </head>
 <body>
 
+    <!-- ===== INTRO: activa tu audio ===== -->
+    <div class="intro-audio" id="introAudio">
+        <button class="intro-close" id="introClose" type="button" aria-label="Cerrar">&times;</button>
+        <p class="intro-audio-text">Activa tu audio, mi querido...</p>
+        <img src="./img/btn-audio.png" class="intro-audio-btn" id="introAudioBtn" alt="Activa el audio">
+    </div>
+
     <div class="hero">
         <h1>
             Melcochometro
         </h1>
         <div class="box-botones-portada">
             <div class="btn-portada" id="btn-portada-1">
-                <a href="#">el sonero llegó</a>
+                <a href="#discografia">el sonero llegó</a>
             </div>
             <div class="btn-portada" id="btn-portada-2">
-                <a href="#">melcochea a tu pata</a>
+                <a href="#melcochometro">melcochea a tu pata</a>
             </div>
             <div class="btn-portada" id="btn-portada-3">
-                <a href="#">habla bien</a>
+                <a href="#habla-bien">habla bien</a>
             </div>
         </div>
         <div class="box-cta">
             Desliza para interactuar
             <i></i>
         </div>
-        <video src="./video/video-portada.mp4" autoplay muted width="100%" height="100%"></video>
+        <!--<img src="./img/btn-audio.png" alt="activa audio" class="btn-audio" width="100%">-->
+        <video src="./video/video-portada.mp4" id="heroVideo" autoplay muted playsinline width="100%" height="100%"></video>
     </div>
 
-    <div class="main-conoce">
+    <div class="main-conoce" id="conoce">
+        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="0" alt="No lo aprietes" role="button" tabindex="0">
         <div class="ctn-conoce">
             <img src="./img/ilus-90-anos.png" alt="90 años" width="100%" class="ilus-1">
             <p>
@@ -41,21 +50,21 @@
             </h3>
             <ul>
                 <li>
-                    <img src="../landing/img/elipse.png" alt="" width="100%">
+                    <img src="../landing/img/icon-conoce-1.png" alt="" width="100%">
                     <h4>Música desde niño</h4>
                     <p>
                         Su vocación musical comenzó en la infancia. A los seis años integró Son de Aruba y, más adelante, formó con sus hermanos Son Cubillas, donde empezó a consolidarse como percusionista y cantante.
                     </p>
                 </li>
                 <li>
-                    <img src="../landing/img/elipse.png" alt="" width="100%">
+                    <img src="../landing/img/icon-conoce-2.png" alt="" width="100%">
                     <h4>Con los grandes</h4>
                     <p>
                         Como sonero compartió escenarios con figuras como Celia Cruz, Johnny Pacheco, Tito Puente y Willie Colón. También grabó para Fania Records y llevó su música a distintos países.
                     </p>
                 </li>
                 <li>
-                    <img src="../landing/img/elipse.png" alt="" width="100%">
+                    <img src="../landing/img/icon-conoce-3.png" alt="" width="100%">
                     <h4>Su verdadera pasión</h4>
                     <p>
                         Aunque en el Perú se hizo masivamente conocido por la comicidad, Melcochita siempre ha dicho que su verdadera pasión es la música. Ha grabado alrededor de 75 temas de salsa.
@@ -65,7 +74,8 @@
         </div>
     </div>
 
-    <div class="main-discografia">
+    <div class="main-discografia" id="discografia">
+        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="1" alt="No lo aprietes" role="button" tabindex="0">
         <div class="ctn-discografia">
 
             <h2 class="titulo-escucha">
@@ -102,16 +112,125 @@
         </div>
     </div>
 
-    <div class="main-melcochometro">
+    <div class="main-melcochometro" id="melcochometro">
+        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="2" alt="No lo aprietes" role="button" tabindex="0">
         <div class="ctn-melcochometro">
             <img src="../landing/img/ilus-melcochometro.png" alt="melcochita" width="100%" class="ilus-melcochometro">
             
             <div class="box-embed-melcochometro">
-                <h4>melcochea a tu pata</h4>
+                <div class="box-titulo-melcochea">
+                    <h4>melcochea a tu pata</h4>
+                </div>                
+                <iframe style="border:none; border-radius: 32px;" src="https://melcochometro.onrender.com/" title="iFrame" width="100%" height="900px" scrolling="no" frameborder="no" allow=""></iframe>
+                <div class="box-aviso">
+                    <p>
+                        Esta experiencia utiliza IA generativa y voz sintética autorizada por Melcochita. <a href="#">Ver términos y condiciones</a>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="main-habla-bien" id="habla-bien">
+        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="3" alt="No lo aprietes" role="button" tabindex="0">
+        <div class="ctn-habla-bien">
+            <div class="box-main-frases">
+                <h4>habla bien</h4>
+
+                <div class="frases-card">
+                    <p class="frases-q">¿Qué buscas?</p>
+
+                    <div class="frases-primary">
+                        <button class="fp-btn fp-frases" type="button" data-cat="frases">Quiero una frase legendaria</button>
+                        <button class="fp-btn fp-chistes" type="button" data-cat="chistes">Mejor cuéntame un chiste</button>
+                    </div>
+
+                    <div class="frases-subs" hidden>
+                        <p class="frases-sublabel" id="frasesSublabel">Frases:</p>
+                        <div class="frases-pills" id="frasesPills"></div>
+                        <button class="frases-select" id="frasesSelect" type="button">Escuchar</button>
+
+                        <div class="frases-player" id="frasesPlayer" hidden>
+                            <span class="fpl-cat" id="fplCat"></span>
+                            <div class="fpl-controls">
+                                <button class="fpl-toggle" id="fplToggle" type="button" aria-label="Reproducir o pausar">
+                                    <span class="ico-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
+                                    <span class="ico-pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg></span>
+                                </button>
+                                <span class="fpl-time" id="fplCur">0:00</span>
+                                <div class="fpl-bar" id="fplBar"><div class="fpl-fill" id="fplFill"></div></div>
+                                <span class="fpl-time" id="fplDur">0:00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <audio id="frasesAudio" preload="none"></audio>
+                </div>
+            </div>
+            <img src="../landing/img/ilus-habla-bien.png" alt="melcochita" width="100%" class="ilus-habla-bien">
+        </div>
+    </div>
+
+    <div class="main-apura-oye">
+        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="4" alt="No lo aprietes" role="button" tabindex="0">
+        <div class="ctn-apura-oye">
+            <h2>
+                apura oye
+            </h2>
+        </div>
+
+        <div class="trivia" id="trivia"></div>
+
+        <div class="ctn-apura-oye">
+            <h2 class="no-vuelvas">
+                no vuelvas
+            </h2>
+            <img src="./img/ilus-no-vuelvas.png" alt="" width="100%" class="ilus-no-vuelvas">
+        </div>
+    </div>
+
+    <!-- ===== FOOTER / créditos ===== -->
+    <footer class="main-footer">
+        <p class="footer-logo">
+            <img src="./img/logo-comercio-footer.png" alt="El Comercio" width="100%">
+        </p>
+        <div class="footer-creditos">
+            <p><span>Idea original:</span> <strong>Alfonso Rivadeneyra</strong></p>
+            <p><span>Textos:</span> <strong>Sonia del Águila</strong></p>
+            <p><span>Desarrollo editorial:</span> <strong>Lorena Obregón y Mayté Ciriaco</strong></p>
+            <p><span>Edición:</span> <strong>Lorena Obregón</strong></p>
+            <p><span>Análisis y desarrollo del Melcochómetro:</span> <strong>Gisella Salmón y Armando Scargglioni</strong></p>
+            <p><span>Diseño:</span> <strong>Marcelo Hidalgo / Angela Peña</strong></p>
+            <p><span>Programación:</span> <strong>Armando Scargglioni</strong></p>
+            <p><span>Edición visual:</span> <strong>Angela Peña</strong></p>
+            <p><span>Video:</span> <strong>Wendy Vega, Gustavo Castillo</strong></p>
+            <p><span>Grabación de audio:</span> <strong>Carls Mayo</strong></p>
+            <p><span>Producción editorial:</span> <strong>Gisella Salmón</strong></p>
+            <p><span>Director periodístico:</span> <strong>Juan Aurelio Arévalo</strong></p>
+        </div>
+
+        <img src="./img/bg-melcocha-footer.png" alt="melcochita footer" width="100%" class="bg-melcocha-footer">
+    </footer>
+
+    <!-- ===== Modal: dato de Melcochita ===== -->
+    <div class="dato-modal" id="datoModal" hidden>
+        <div class="dato-box">
+            <img src="./img/btn-apretar.png" class="dato-chili" alt="">
+            <button class="dato-close" id="datoClose" type="button" aria-label="Cerrar">&times;</button>
+            <div class="dato-card">
+                <p class="dato-text" id="datoText"></p>
+            </div>
+        </div>
+    </div>
+
+    <a class="btn-flotante-rojo" id="btnFlotanteRojo" href="#melcochometro" aria-label="Melcochea a tu pata">
+        <img src="./img/btn-melcochea-a-tu-pata-aqui.png" alt="Melcochea a tu pata">
+    </a>
+
+    <script src="./js/dato.js" defer></script>
+    <script src="./js/trivia.js" defer></script>
+    <script src="./js/hero.js" defer></script>
+    <script src="./js/habla-bien.js" defer></script>
     <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
     <script src="./js/discografia.js" defer></script>
     

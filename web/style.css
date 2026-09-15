@@ -45,6 +45,14 @@ body {
     font-style: normal;
     font-display: swap;
 }
+@font-face {
+    font-family: 'Isidora Sans Bold';
+    src: url('../fonts/IsidoraSans-Bold.woff2') format('woff2'),
+        url('../fonts/IsidoraSans-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
 
 
 .contenedor {
@@ -136,11 +144,12 @@ label {
 input[type="text"],
 select {
   padding: 10px 12px;
-  border: 1px solid #d8d2c4;
+  border: none;
   border-radius: 8px;
   font-size: 1rem;
   width: 100%;
-  background: #fff;
+  color: #fff;
+  background: #313131;
 }
 
 input[type="text"]:focus,
@@ -181,14 +190,17 @@ select:focus {
 }
 
 button {
-  margin-top: 4px;
-  padding: 14px 16px;
-  border: none;
-  border-radius: 8px;
-  background: #F5E30D;
-  color: #000;
-  cursor: pointer;
-  font: 2rem/1.1 'LiquidAmber';
+    padding: 14px 16px;
+    border: none;
+    background: #F5E30D;
+    color: #000;
+    cursor: pointer;
+    font: 2rem / 1.1 'LiquidAmber';
+    max-width: 250px;
+    border-radius: 36px;
+    display: block;
+    margin: 0 auto;
+    width: 100%;
 }
 
 button:hover:not(:disabled) {
@@ -202,9 +214,8 @@ button:disabled {
 
 .btn-secundario {
   background: #ffffff;
-  color: #b3401f;
-  border: 2px solid #b3401f;
-  font-size: 0.95rem;
+  color: #000;
+  font-size: 1.3rem;
 }
 
 .btn-secundario:hover:not(:disabled) {
@@ -219,73 +230,154 @@ button:disabled {
 
 #texto-cargando {
   margin: 0;
-  font-size: 1.2rem;
-  color: #b3401f;
-  font-weight: 700;
+  font: 2rem/1.1 'LiquidAmber';
+  color: #F5E30D;
 }
 
-/* ---- Resultado ---- */
+.gif-cargando {
+  display: block;
+  margin: 20px auto 0;
+  max-width: 240px;
+  width: 66%;
+}
+
+/* ================= SKIN DEL RESULTADO ================= */
+#tarjeta-resultado {
+  gap: 22px;
+  padding: 30px 24px 32px;
+  text-align: center;
+}
+
 .etiqueta-resultado {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #6b6255;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: center;
+  display: none;
 }
 
-.texto-chapa {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin: 8px 0 6px 0;
-  color: #241d15;
+/* Chapa (título grande, blanco) */
+#tarjeta-resultado .texto-chapa {
+  color: #fff;
+  font: 2.6rem/1.05 'LiquidAmber';
+  letter-spacing: 0.01em;
+  margin: 4px 0 2px;
   text-align: center;
   text-transform: uppercase;
 }
 
-.remate {
-  margin: 0 0 6px 0;
+/* Remate */
+#tarjeta-resultado .remate {
+  color: #fff;
+  font: 1.25rem/1.25 'LiquidAmber';
+  margin: 6px 0;
   text-align: center;
-  font-size: 0.95rem;
-  font-style: italic;
-  color: #b3401f;
-  font-weight: 600;
+  text-transform: uppercase;
 }
 
-.fila-feedback {
+/* Fila de botones de audio (amarillos) */
+.fila-audio {
   display: flex;
-  gap: 10px;
-  margin-top: 4px;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
 }
+  #tarjeta-resultado .btn-audio {
+    align-items: center;
+    background: #F5E30D;
+    border-radius: 40px;
+    color: #111;
+    display: flex;
+    flex: 1 1 190px;
+    font: 1.3rem/1 'LiquidAmber';
+    gap: 8px;
+    justify-content: center;
+    margin: 0;
+    max-width: none;
+    padding: 15px 18px;
+    text-transform: uppercase;
+    width: auto;
+  }
+    #tarjeta-resultado .btn-audio:hover:not(:disabled) {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    #tarjeta-resultado .btn-audio[hidden] { display: none; }
+    .btn-audio .ico { font-size: 1.05rem; }
+    .btn-audio .ico img{
+          max-width: 20px;
+    }
+    .btn-audio .ico-svg {
+      fill: none;
+      height: 18px;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+      width: 18px;
+    }
 
-.btn-feedback {
-  flex: 1;
-  margin-top: 0;
-  padding: 10px 8px;
-  background: #ffffff;
-  color: #241d15;
-  border: 1px solid #d8d2c4;
-  font-size: 0.88rem;
-  font-weight: 700;
+/* Feedback: solo emojis */
+#tarjeta-resultado .fila-feedback {
+  display: flex;
+  gap: 26px;
+  justify-content: center;
+  margin: 0;
 }
-
-.btn-feedback:hover:not(:disabled) {
-  background: #f4f1ea;
-}
-
-.btn-feedback.votado {
-  border-color: #b3401f;
-  color: #b3401f;
-}
+  #tarjeta-resultado .btn-feedback {
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex: 0 0 auto;
+    font-size: 2rem;
+    line-height: 1;
+    margin: 0;
+    max-width: none;
+    padding: 6px;
+    transition: transform 0.12s ease, filter 0.15s ease;
+    width: auto;
+  }
+    #tarjeta-resultado .btn-feedback:hover:not(:disabled) { transform: scale(1.18); }
+    #tarjeta-resultado .btn-feedback.votado {
+      filter: drop-shadow(0 0 7px rgba(245, 227, 13, 0.75));
+      transform: scale(1.2);
+    }
+    #tarjeta-resultado .btn-feedback:disabled { cursor: default; opacity: 1; }
 
 .mensaje-feedback {
-  text-align: center;
-  font-size: 0.82rem;
-  color: #6b6255;
+  color: #9a9a9a;
+  font: 0.85rem/1.3 'Isidora Sans Medium';
   margin: 0;
+  text-align: center;
 }
+
+/* Botón blanco principal */
+#tarjeta-resultado .btn-otra-victima {
+  background: #fff;
+  border-radius: 40px;
+  color: #111;
+  font: 1.3rem/1 'LiquidAmber';
+  margin: 8px auto 0;
+  max-width: 360px;
+  padding: 17px 24px;
+  text-transform: uppercase;
+  width: 100%;
+}
+  #tarjeta-resultado .btn-otra-victima:hover:not(:disabled) {
+    background: #f1f1f1;
+    transform: translateY(-1px);
+  }
+
+/* "Otra chapa" (mismo pata): secundario sutil */
+#tarjeta-resultado .btn-otra-chapa-link {
+  background: none;
+  color: #bdbdbd;
+  font: 0.9rem/1 'Isidora Sans Semibold';
+  margin: 0 auto;
+  max-width: none;
+  padding: 4px 8px;
+  text-decoration: underline;
+  text-transform: uppercase;
+  width: auto;
+  display: none;
+}
+  #tarjeta-resultado .btn-otra-chapa-link:hover:not(:disabled) { color: #F5E30D; }
 
 .tarjeta.error {
   border: 1px solid #c0392b;

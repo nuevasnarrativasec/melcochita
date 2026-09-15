@@ -233,13 +233,6 @@ if (btnEscuchar) {
 async function compartirChapa() {
   if (!_blobMelco) return;
   const archivo = new File([_blobMelco], "melcochita.mp3", { type: "audio/mpeg" });
-// Móvil: compartir nativo con el MP3 adjunto (el enlace va DENTRO del texto,
-// sin el campo `url` aparte, que hace colgar a WhatsApp). Escritorio: descarga.
-async function compartirChapa() {
-  if (!_blobMelco) return;
-  const archivo = new File([_blobMelco], "melcochita.mp3", { type: "audio/mpeg" });
-  const enlace = window.location.origin;
-  const texto = `Melcochita me chapó: "${textoChapa.textContent}" 😂 Hazte el tuyo: ${enlace}`;
 
   const esTactil = (navigator.maxTouchPoints || 0) > 0 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   const puedeArchivo = navigator.canShare && navigator.canShare({ files: [archivo] });
@@ -247,7 +240,6 @@ async function compartirChapa() {
   if (esTactil && puedeArchivo) {
     try {
       await navigator.share({ files: [archivo] }); // solo el archivo: máxima compatibilidad
-      await navigator.share({ files: [archivo], text: texto });
       return;
     } catch (err) {
       if (err && err.name === "AbortError") return; // el usuario canceló

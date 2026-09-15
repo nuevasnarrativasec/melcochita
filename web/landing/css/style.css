@@ -8,6 +8,10 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -116,6 +120,17 @@ body {
                 padding: 50px 40px;
                 width: 205px;
             }
+    @keyframes portadaPulse{
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.07); }
+    }
+        .btn-portada{
+            animation: portadaPulse 2.2s ease-in-out infinite;
+        }
+            #btn-portada-2{
+                animation-duration: 1.05s;   /* el rojo palpita más rápido */
+            }
+
     .box-cta{
         bottom: 35px;
         color: #fff;
@@ -133,11 +148,87 @@ body {
             margin-top: 8px;
             width: 10px;
         }
+    .btn-audio{
+        cursor: pointer;
+        max-width: 220px;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
+
+    /* ===== Intro: activa tu audio ===== */
+    .intro-audio{
+        align-items: center;
+        background: rgba(7, 16, 109, 0.9);
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        inset: 0;
+        justify-content: center;
+        padding: 24px;
+        position: fixed;
+        text-align: center;
+        transition: opacity .45s ease, visibility .45s ease;
+        z-index: 200;
+    }
+        .intro-audio.is-hidden{
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+        .intro-audio-text{
+            color: #fff;
+            font: 2.6rem/1.2 'LiquidAmber';
+            letter-spacing: .02em;
+            text-transform: uppercase;
+        }
+        .intro-audio-btn{
+            cursor: pointer;
+            max-width: 40px;
+            transition: transform .15s ease;
+            width: 70%;
+        }
+            .intro-audio-btn:hover{ transform: scale(1.05); }
+        .intro-close{
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 2.6rem;
+            line-height: 1;
+            padding: 6px 12px;
+            position: absolute;
+            right: 20px;
+            top: 16px;
+        }
+            .intro-close:hover{ color: #ffee01; }
+
+    /* ===== Botón rojo flotante (fuera del hero) ===== */
+    .btn-flotante-rojo{
+        animation: portadaPulse 1.05s ease-in-out infinite;
+        opacity: 0;
+        position: fixed;
+        right: 14px;
+        top: 14px;
+        visibility: hidden;
+        z-index: 150;
+        transition: opacity .35s ease, visibility .35s ease;
+    }
+        .btn-flotante-rojo.is-visible{
+            opacity: 1;
+            visibility: visible;
+        }
+        .btn-flotante-rojo img{
+            display: block;
+            height: auto;
+            width: 150px;
+        }
 
 .main-conoce{
     background: url('../img/bg-conoce.jpg') no-repeat center top;
     background-size: cover;
     padding: 80px 0;
+    position: relative;
 }
     .ctn-conoce{
         margin: 0 auto;
@@ -179,7 +270,7 @@ body {
                 .ctn-conoce ul li img{
                     display: block;
                     margin: 0 auto 10px;
-                    max-width: 100px;
+                    max-width: 80px;
                 }
                 .ctn-conoce ul li h4{
                     font: 1.2rem/1.4 'Isidora Sans Bold';
@@ -427,34 +518,596 @@ body {
     background-size: cover;
     overflow: hidden;
     margin-top: -170px;
-    padding: 80px 0 0;
+    padding: 80px 0 135px;
     position: relative;
 }
     .ctn-melcochometro{
         margin: 0 auto;
-        max-width: 1024px;
-        padding: 120px 0 0 0;
+        max-width: 1200px;
+        padding: 160px 0 0 0;
     }
         img.ilus-melcochometro{
             display: inline-block;
-            max-width: 500px;
-            vertical-align: top;
+            max-width: 600px;
+            vertical-align: bottom;
         }
         .box-embed-melcochometro{
-            background-color: #000;
             border-radius: 30px;
             display: inline-block;
+            margin: 0 20px;
             vertical-align: top;
             width: 500px;
         }
+            .box-titulo-melcochea{
+                background-color: #000;
+                border-top-left-radius: 32px;
+                border-top-right-radius: 32px;
+                margin-bottom: -50px;
+                position: relative;
+            }
             .box-embed-melcochometro h4{
                 background: url('../img/titulo-melcochometro.png') no-repeat center center;
                 background-size: 100%;
                 color: transparent;
-                font: 3rem/1.2 'LiquidAmber';
+                font: 3rem / 1.2 'LiquidAmber';
+                padding: 55px 0;
+                text-align: center;
+                margin: 0 auto;
+                max-width: 300px;
+                transform: translate(40%, -95%);
+                left: 0;
+                position: absolute;
+            }
+        .box-aviso{
+            background-color: rgba(0, 0, 0, 0.5);
+            border-bottom-left-radius: 32px;
+            border-bottom-right-radius: 32px;
+        } 
+            .box-aviso p{
+                color: #F5E30D;
+                font: 1rem / 1.3 'Isidora Sans Medium';
+                margin: 0 auto;
+                max-width: 400px;
+                padding: 40px 0 15px;
+                text-align: center;
+                margin-top: -30px;
+            }
+                .box-aviso p a{
+                    color: #F5E30D;
+                }
+
+.main-habla-bien{
+    background: url('../img/bg-habla-bien.jpg') no-repeat center top;
+    background-size: cover;
+    overflow: hidden;
+    padding: 0 0 135px;
+    position: relative;
+    text-align: center;
+}
+    .ctn-habla-bien{
+        margin: 0 auto;
+        max-width: 1200px;
+        padding: 120px 0 0 0;
+    }
+        .box-main-frases{
+            display: inline-block;
+            min-width: 620px;
+            vertical-align: top;
+        }
+            .box-main-frases h4{
+                background: url(../img/titulo-habla-bien.png) no-repeat center center;
+                background-size: 100%;
+                color: transparent;
+                font: 3rem / 1.2 'LiquidAmber';
                 padding: 55px 0;
                 text-align: center;
                 margin: 0 auto;
                 max-width: 300px;
                 margin-top: -60px;
             }
+
+    /* ----- Tarjeta interactiva ¡Habla bien! ----- */
+    .frases-card{
+        background: #0c0c0c;
+        border-radius: 40px;
+        margin: 18px auto 0;
+        max-width: 620px;
+        padding: 40px 20px 48px;
+    }
+        .frases-q{
+            color: #fff;
+            font: 2.5rem/1.2 'LiquidAmber';
+            margin-bottom: 22px;
+        }
+
+        /* Botones primarios (filtro) */
+        .frases-primary{
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+            .fp-btn{
+                border: 3px solid transparent;
+                border-radius: 40px;
+                cursor: pointer;
+                font: 1.5rem/1 'LiquidAmber';
+                max-width: 460px;
+                padding: 17px 30px;
+                transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
+                width: 100%;
+            }
+                .fp-btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+                .fp-btn.is-active{ box-shadow: 0 0 0 4px rgba(255,255,255,.18); }
+                .fp-frases{ background: #F5E30D; color: #141414; }
+                .fp-chistes{ background: #F5E30D; color: #141414; }
+
+        /* Subsecciones */
+        .frases-subs{ margin-top: 34px; }
+            .frases-sublabel{
+                color: #f5e40f;
+                font: 2rem/1.2 'LiquidAmber';
+                margin-bottom: 20px;
+            }
+            .frases-pills{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 14px;
+                justify-content: center;
+            }
+                .frases-pill{
+                    border: 3px solid transparent;
+                    border-radius: 40px;
+                    color: #141414;
+                    cursor: pointer;
+                    font: 1.5rem/1 'LiquidAmber';
+                    padding: 14px 26px;
+                    transition: transform .12s ease, box-shadow .15s ease;
+                }
+                    .frases-pill:hover{ transform: translateY(-2px); }
+                    .frases-pill.is-active{ box-shadow: 0 0 0 4px rgba(255,255,255,.85); }
+                    .pill-amarillo{ background: #0BEC26; }
+                    .pill-rosa{     background: #0BEC26; }
+                    .pill-morado{   background: #0BEC26; }
+                    /* Chistes: todos los pills en celeste */
+                    .frases-pills.is-chistes .frases-pill{ background: #46D4FF; }
+
+            .frases-select{
+                background: #f5e40f;
+                border: none;
+                border-radius: 40px;
+                color: #141414;
+                cursor: pointer;
+                display: block;
+                font: 2rem/1 'LiquidAmber';
+                margin: 38px auto 0;
+                min-width: 300px;
+                padding: 20px 40px;
+                transition: transform .12s ease, filter .15s ease;
+            }
+                .frases-select:hover:not(:disabled){ transform: translateY(-2px); filter: brightness(.96); }
+                .frases-select:disabled{ cursor: not-allowed; opacity: .45; transform: none; }
+                .frases-select.is-playing{ animation: selectPulse 1s ease-in-out infinite; }
+
+    /* Reproductor de resultado */
+    .frases-player{
+        align-items: center;
+        background: #1a1a1a;
+        border-radius: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 26px auto 0;
+        max-width: 460px;
+        padding: 20px 24px;
+    }
+        .frases-player[hidden]{ display: none; }
+        .fpl-cat{
+            color: #ffd23b;
+            font: 1.15rem/1.2 'Isidora Sans Bold';
+            text-align: center;
+        }
+        .fpl-controls{
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+            .fpl-toggle{
+                align-items: center;
+                background: #2ee06a;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                flex: 0 0 auto;
+                height: 46px;
+                justify-content: center;
+                transition: transform .12s ease, background .15s ease;
+                width: 46px;
+            }
+                .fpl-toggle:hover{ background: #35f277; transform: scale(1.06); }
+                .fpl-toggle svg{ fill: #0b0b0b; height: 20px; width: 20px; }
+                .fpl-toggle .ico-pause{ display: none; }
+                .frases-player.is-playing .fpl-toggle .ico-play{ display: none; }
+                .frases-player.is-playing .fpl-toggle .ico-pause{ display: block; }
+            .fpl-time{
+                color: #cfcfcf;
+                flex: 0 0 auto;
+                font: .95rem/1 'Isidora Sans Semibold';
+                min-width: 38px;
+                text-align: center;
+            }
+            .fpl-bar{
+                background: rgba(255,255,255,.18);
+                border-radius: 4px;
+                cursor: pointer;
+                flex: 1 1 auto;
+                height: 8px;
+                overflow: hidden;
+                position: relative;
+                touch-action: none;
+            }
+                .fpl-fill{
+                    background: #2ee06a;
+                    border-radius: 4px;
+                    height: 100%;
+                    left: 0;
+                    position: absolute;
+                    top: 0;
+                    width: 0;
+                }
+
+    @keyframes selectPulse{
+        0%, 100% { box-shadow: 0 0 0 0 rgba(255,210,59,.6); }
+        50%      { box-shadow: 0 0 0 10px rgba(255,210,59,0); }
+    }
+
+    @media (max-width: 820px){
+        .frases-card{ border-radius: 30px; padding: 30px 24px 36px; }
+        .frases-q, .frases-sublabel{ font-size: 1.3rem; }
+        .fp-btn{ font-size: 1.15rem; padding: 15px 22px; }
+        .frases-pill{ font-size: 1.1rem; padding: 12px 20px; }
+        .frases-select{ font-size: 1.25rem; min-width: 0; width: 100%; }
+        .frases-player{ max-width: none; }
+    }
+    img.ilus-habla-bien{
+        display: inline-block;
+        max-width: 500px;
+        vertical-align: top;
+    }
+
+    @media (max-width: 820px){
+        .intro-audio-text{ font-size: 1.7rem; }
+        .intro-audio-btn{ width: 78%; }
+        .intro-close{ font-size: 2.2rem; right: 12px; top: 10px; }
+        .btn-flotante-rojo img{ width: 104px; }
+    }
+
+
+/* ================= ¡No lo aprietes! (botón + modal) ================= */
+.btn-apretar{
+    animation: apretarWiggle 3.2s ease-in-out infinite;
+    cursor: pointer;
+    left: 28px;
+    position: absolute;
+    top: 24px;
+    transform-origin: 50% 90%;
+    width: 130px;
+    z-index: 30;
+}
+    .btn-apretar:hover{ animation: none; transform: scale(1.07) rotate(-4deg); }
+
+@keyframes apretarWiggle{
+    0%, 92%, 100% { transform: rotate(0deg); }
+    94%  { transform: rotate(-5deg); }
+    96%  { transform: rotate(4deg); }
+    98%  { transform: rotate(-2deg); }
+}
+
+.dato-modal{
+    align-items: center;
+    background: rgba(6, 8, 20, 0.86);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 24px;
+    position: fixed;
+    z-index: 300;
+}
+    .dato-modal[hidden]{ display: none; }
+
+    .dato-box{
+        max-width: 640px;
+        position: relative;
+        width: 100%;
+    }
+        .dato-chili{
+            left: 50%;
+            position: absolute;
+            top: -20px;
+            width: 150px;
+            z-index: 2;
+            transform: translate(-50%, 0);
+        }
+        .dato-close{
+            align-items: center;
+            background: #ffd23b;
+            border: none;
+            border-radius: 50%;
+            color: #111;
+            cursor: pointer;
+            display: flex;
+            font-size: 1.9rem;
+            height: 48px;
+            justify-content: center;
+            line-height: 1;
+            position: absolute;
+            right: 10%;
+            top: 20px;
+            transition: transform .12s ease, background .15s ease;
+            width: 48px;
+            z-index: 4;
+        }
+            .dato-close:hover{ background: #ffe152; transform: scale(1.09); }
+        .dato-card{
+            background: #e8391f;
+            border-radius: 6px;
+            box-shadow: 0 18px 50px rgba(0,0,0,.5);
+            margin-top: 90px;
+            padding: 55px 30px;
+            position: relative;
+            transform: rotate(-2deg);
+            z-index: 1;
+        }
+            .dato-text{
+                color: #fff;
+                font: 1.35rem/1.55 'Isidora Sans Regular';
+                text-align: center;
+            }
+                .dato-text strong{
+                    color: #ffd23b;
+                    font-family: 'Isidora Sans Bold';
+                }
+
+@media (max-width: 820px){
+    .btn-apretar{ left: 14px; top: 16px; width: 104px; }
+    .dato-chili{ width: 150px; }
+    .dato-close{ height: 42px; top: 50px; width: 42px; font-size: 1.7rem; }
+    .dato-card{ margin-top: 66px; padding: 44px 26px; }
+    .dato-text{ font-size: 1.1rem; }
+}
+
+.main-apura-oye{
+    background: url('../img/bg-apura-oye.jpg') no-repeat center top;
+    background-size: cover;
+    overflow: hidden;
+    padding: 0 0 40px;
+    position: relative;
+    text-align: center;
+}
+    .ctn-apura-oye{
+        
+    }
+        .ctn-apura-oye h2{
+            background: url(../img/titulo-apura-oye.png) no-repeat center center;
+            background-size: 100%;
+            color: transparent;
+            font: 3rem / 1.2 'LiquidAmber';
+            padding: 55px 0;
+            text-align: center;
+            margin: 0 auto;
+            max-width: 400px;
+        }
+            .ctn-apura-oye h2.no-vuelvas{
+                background: url(../img/titulo-no-vuelvas.png) no-repeat center center;
+                background-size: 100%;
+                font: 5rem / 1.2 'LiquidAmber';
+                max-width: 500px;
+            }
+        img.ilus-no-vuelvas{
+            max-width: 500px;
+
+            animation: pulse 2s infinite;
+        }
+            @keyframes pulse {
+                0% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.1);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+
+
+/* ================= APURA OYE — Trivia ================= */
+.trivia{
+    margin: 24px auto 100px;
+    max-width: 640px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+    .trivia-card{
+        background: #d3342a;
+        border-radius: 12px;
+        margin: 20px auto 0;
+        max-width: 600px;
+        padding: 44px 44px 40px;
+        position: relative;
+        text-align: center;
+        transform: rotate(-1.2deg);
+    }
+        /* Esquinas amarillas */
+        .tc-corner{
+            background: #F5E30D;
+            height: 62px;
+            position: absolute;
+            width: 62px;
+            z-index: 3;
+        }
+            .tc-tr{ clip-path: polygon(100% 0, 0 0, 100% 100%); right: -12px; top: -12px; }
+            .tc-bl{ bottom: -12px; clip-path: polygon(0 0, 0 100%, 100% 100%); left: -12px; }
+
+        .tc-progress{
+            color: #F5E30D;
+            font: 2rem/1 'LiquidAmber';
+            margin-bottom: 20px;
+        }
+        .tc-question{
+            color: #fff;
+            font: 2rem/1.3 'LiquidAmber';
+            margin-bottom: 26px;
+            text-transform: uppercase;
+        }
+
+        .tc-options{
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+            .tc-opt{
+                align-items: center;
+                background: #fff;
+                border: none;
+                border-radius: 40px;
+                color: #111;
+                cursor: pointer;
+                display: flex;
+                font: 1.15rem/1.2 'Isidora Sans Semibold';
+                gap: 14px;
+                padding: 9px 16px;
+                text-align: left;
+                transition: transform .1s ease, background .15s ease;
+                width: 100%;
+            }
+                .tc-opt:hover:not(:disabled){ transform: translateY(-2px); }
+                .tc-opt:disabled{ cursor: default; opacity: 1; }
+                .tc-letter{
+                    align-items: center;
+                    background: #111;
+                    border-radius: 50%;
+                    color: #fff;
+                    display: flex;
+                    flex: 0 0 auto;
+                    font: 1.2rem/1 'Isidora Sans Bold';
+                    height: 44px;
+                    justify-content: center;
+                    width: 44px;
+                }
+                .tc-opt.is-correct{ background: #F5E30D; }
+                .tc-opt.is-wrong{ background: #a5271a; color: #fff; }
+
+        .tc-explain{
+            color: #F5E30D;
+            font: 1.05rem/1.45 'Isidora Sans Semibold';
+            margin-bottom: 24px;
+            text-align: left;
+        }
+            .tc-explain[hidden]{ display: none; }
+
+        .tc-next, .tc-replay{
+            background: #F5E30D;
+            border: none;
+            border-radius: 40px;
+            color: #111;
+            cursor: pointer;
+            font: 2rem/1 'LiquidAmber';
+            margin: 0 auto;
+            min-width: 230px;
+            padding: 16px 32px;
+            text-transform: uppercase;
+            transition: transform .12s ease, filter .15s ease;
+        }
+            .tc-next:hover:not(:disabled), .tc-replay:hover{ filter: brightness(1.05); transform: translateY(-2px); }
+            .tc-next:disabled{ cursor: not-allowed; opacity: .5; transform: none; }
+
+        /* ----- Tarjeta de resultado ----- */
+        .trivia-card.result{ background: #0c0c0c; }
+            .tc-face{
+                display: block;
+                height: auto;
+                margin: 0 auto 6px;
+                width: 150px;
+            }
+            .tc-eres{
+                color: #F5E30D;
+                font: 1rem/1 'Isidora Sans Bold';
+                letter-spacing: .1em;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+            }
+            .tc-title{
+                color: #fff;
+                font: 2.6rem/1.05 'Isidora Sans Bold';
+                margin-bottom: 22px;
+                text-transform: uppercase;
+            }
+            .tc-desc{
+                color: #f0f0f0;
+                font: 1.15rem/1.5 'Isidora Sans Regular';
+                margin: 0 auto 28px;
+                max-width: 440px;
+            }
+
+@media (max-width: 820px){
+    .trivia-card{ padding: 34px 22px 30px; }
+    .tc-progress{ font-size: 1.6rem; }
+    .tc-question{ font-size: 1.2rem; }
+    .tc-opt{ font-size: 1rem; }
+    .tc-letter{ height: 38px; width: 38px; font-size: 1.05rem; }
+    .tc-title{ font-size: 2rem; }
+    .tc-next, .tc-replay{ min-width: 0; width: 100%; }
+    .tc-corner{ height: 48px; width: 48px; }
+}
+
+/* ================= FOOTER / créditos ================= */
+.main-footer{
+    background: #0a0a0a;
+    clip-path: polygon(0 72px, 100% 0, 100% 100%, 0 100%);   /* trazo diagonal en el top */
+    color: #fff;
+    margin-top: -72px;                                         /* solapa la sección roja anterior */
+    padding: 140px 20px 0;
+    position: relative;
+    text-align: center;
+    z-index: 2;
+}
+    .footer-logo{
+        color: #fff;
+        margin-bottom: 40px;
+    }
+        .footer-logo img{
+            display: block;
+            margin: 0 auto;
+            max-width: 150px;
+        }
+    .footer-creditos{
+        margin: 0 auto 50px;
+        max-width: 900px;
+    }
+        .footer-creditos p{
+            color: #d6d6d6;
+            font: 1rem/1.3 'Isidora Sans Regular';
+            margin-bottom: 16px;
+        }
+            .footer-creditos strong{
+                color: #fff;
+                font-family: 'Isidora Sans Bold';
+            }
+    .bg-melcocha-footer{
+        display: block;
+        margin: 0 auto;
+        max-width: 900px;
+    }
+
+@media (max-width: 820px){
+    .main-footer{ clip-path: polygon(0 46px, 100% 0, 100% 100%, 0 100%); margin-top: -46px; padding: 90px 20px 50px; }
+    .footer-logo{ font-size: 2.4rem; margin-bottom: 28px; }
+    .footer-creditos p{ font-size: 1rem; }
+}
