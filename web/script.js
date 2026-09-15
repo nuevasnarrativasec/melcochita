@@ -116,16 +116,24 @@ function detenerMensajesCarga() {
 
 // --- Secuencia de revelación: "¡Ya salió!" → intro grabado → chapa ---
 async function secuenciaRevelacion(texto) {
+  // Pedimos la voz de la chapa a /voz DE INMEDIATO, en paralelo con "¡Ya salió!"
+  // y el intro grabado. Así, cuando termina el intro ("mi querido" / "oye"), el
+  // audio de la chapa ya está listo y empalma sin el silencio de 1-2 s que antes
+  // ocurría porque el fetch recién arrancaba al terminar el intro.
+  const chapaLista = prepararVozChapa(texto);
   await _reproducir(`${AUDIO_CARGA_DIR}/${AUDIO_REVELACION_FILE}`);
   if (AUDIOS_INTRO.length) {
     const archivo = AUDIOS_INTRO[Math.floor(Math.random() * AUDIOS_INTRO.length)];
     await _reproducir(`${AUDIO_INTRO_DIR}/${archivo}`);
   }
-  await reproducirChapa(texto);
+  const urlChapa = await chapaLista; // normalmente ya resuelta -> sin espera
+  if (urlChapa) await _reproducir(urlChapa); // empalma pegado al intro
 }
 
-// --- Voz de la chapa (pedida a /voz, PELADA: el "Mi querido" lo da el intro) ---
-async function reproducirChapa(texto) {
+// --- Prepara la voz de la chapa (fetch a /voz, PELADA: el "Mi querido" lo da el
+//     intro). NO reproduce: solo deja el audio listo y devuelve su objectURL,
+//     o null si no hay audio. Se llama antes del intro para precargarla. ---
+async function prepararVozChapa(texto) {
   if (btnEscuchar) btnEscuchar.hidden = true;
   if (btnCompartir) btnCompartir.hidden = true;
   _blobMelco = null;
@@ -136,16 +144,23 @@ async function reproducirChapa(texto) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ texto }),
     });
-    if (!r.ok) return; // sin audio (p.ej. voz no configurada): la chapa se ve igual
+    if (!r.ok) return null; // sin audio (p.ej. voz no configurada): la chapa se ve igual
     const blob = await r.blob();
     _blobMelco = blob;
     _urlChapa = URL.createObjectURL(blob);
     if (btnEscuchar) btnEscuchar.hidden = false;
     if (btnCompartir) btnCompartir.hidden = false;
-    await _reproducir(_urlChapa); // mismo elemento ya desbloqueado
+    return _urlChapa;
   } catch (err) {
     /* el audio es un plus; nunca interrumpe la experiencia */
+    return null;
   }
+}
+
+// Compatibilidad: pide y reproduce la chapa (fetch + play en secuencia).
+async function reproducirChapa(texto) {
+  const url = await prepararVozChapa(texto);
+  if (url) await _reproducir(url);
 }
 
 function mostrarSolo(el) {

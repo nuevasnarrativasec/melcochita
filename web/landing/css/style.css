@@ -373,6 +373,7 @@ body {
             display: flex;
             gap: 24px;
             overflow-x: auto;
+            overscroll-behavior-x: contain;
             padding: 6px 4px 12px;
             scroll-snap-type: x proximity;
             scrollbar-width: none;
