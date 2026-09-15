@@ -39,7 +39,6 @@
   var subsBox     = card.querySelector('.frases-subs');
   var sublabel    = card.querySelector('#frasesSublabel');
   var pillsBox    = card.querySelector('#frasesPills');
-  var selectBtn   = card.querySelector('#frasesSelect');
   var audio       = card.querySelector('#frasesAudio');
 
   // Reproductor
@@ -52,7 +51,6 @@
   var plFill = card.querySelector('#fplFill');
 
   var state = { cat: null, sub: null };
-  if (selectBtn) selectBtn.disabled = true;   // inactivo hasta elegir una opción
 
   /* ---------- 1. Botones primarios ---------- */
   primaryBtns.forEach(function (btn) {
@@ -63,7 +61,6 @@
       state.sub = null;
       renderSubs(cat);
       subsBox.hidden = false;
-      selectBtn.disabled = true;   // hasta que se elija una subsección
       // al cambiar de categoría, ocultamos el reproductor anterior
       audio.pause();
       player.hidden = true;
@@ -87,11 +84,9 @@
         pillsBox.querySelectorAll('.frases-pill').forEach(function (p) {
           p.classList.toggle('is-active', p === pill);
         });
-        selectBtn.disabled = false;   // recién ahora se puede seleccionar
-        // El player aparece solo al presionar "Seleccionar":
-        // al cambiar de subsección se oculta el resultado anterior.
-        audio.pause();
-        player.hidden = true;
+        // Al tocar la opción se reproduce y se muestra el player de una vez.
+        // (Tocar de nuevo la misma opción da otro audio al azar.)
+        reproducirSub(sub);
       });
       pillsBox.appendChild(pill);
     });
@@ -109,8 +104,7 @@
     return pick(subs); // sin subsección elegida -> cualquiera de la categoría
   }
 
-  selectBtn.addEventListener('click', function () {
-    var sub = currentSub();
+  function reproducirSub(sub) {
     if (!sub || !sub.files.length) return;
 
     var file = pick(sub.files);
@@ -130,7 +124,7 @@
 
     var p = audio.play();
     if (p && p.catch) p.catch(function () {});
-  });
+  }
 
   /* ---------- 4. Controles del reproductor ---------- */
   function fmt(t) {
