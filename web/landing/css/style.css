@@ -910,6 +910,8 @@ body {
             }
         img.ilus-no-vuelvas{
             max-width: 500px;
+            position: relative;
+            z-index: 50;
 
             animation: pulse 2s infinite;
         }

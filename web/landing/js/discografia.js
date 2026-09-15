@@ -18,12 +18,12 @@
      sirven de demo para que la reproducción funcione ya mismo.
      Reemplázalos por el que corresponde a cada portada. */
   const ALBUMES = [
-    {
+    /*{
       cover: './img/portada-disco-1.png',
       titulo: '“Karamanduka y Melcochita with Mag Peruvian All Stars” (1969)',
       descripcion: 'Uno de los registros que muestran la faceta salsera de Melcochita junto a Karamanduka y músicos peruanos. Resume una etapa en la que consolidaba su voz y oficio como sonero.',
       spotify: 'spotify:album:1ywBoxqGjaqWWQVaHD1LbY'
-    },
+    },*/
     {
       cover: './img/portada-disco-1.png',
       titulo: '“Acabo con Lima, huyo pa’ New York” (1969)',

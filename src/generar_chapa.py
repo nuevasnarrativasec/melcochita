@@ -144,6 +144,33 @@ def cargar_api_key():
     return api_key
 
 
+# Marco que el modelo a veces antepone al remate ("A Melcochita le dicen X",
+# "A X le decían Y", "Le dicen Z"). La chapa debe quedar PELADA: solo el remate.
+_MARCO_CHAPA = re.compile(
+    r"^\s*(?:a\s+.+?\s+)?le\s+(?:dic\w*|dec\w*|llam\w*|dij\w*|conoc\w*)\s+",
+    re.IGNORECASE,
+)
+
+
+def _limpiar_chapa(texto):
+    """Quita marcos tipo 'A Melcochita le dicen ...' y deja solo el remate.
+
+    La chapa se muestra pelada; el marco discursivo ('Mi querido...') lo pone
+    voz.py. Si el marco fuera todo el texto, se conserva el original para no
+    devolver algo vacío.
+    """
+    if not texto:
+        return texto
+    t = texto.strip()
+    m = _MARCO_CHAPA.match(t)
+    if not m:
+        return t  # ya venía pelada: no la tocamos
+    nuevo = t[m.end():].strip()
+    if not nuevo:
+        return t  # el marco era todo el texto: conservamos el original
+    return nuevo[0].upper() + nuevo[1:]
+
+
 def _normalizar(texto):
     t = (texto or "").strip().lower()
     t = re.sub(r"[¡¿!?.,;:\"'‘’“”]", "", t)
@@ -409,6 +436,8 @@ inspiración de ESTRUCTURA, nunca de palabras a copiar):
 
 REGLAS DE CONSTRUCCIÓN:
 - El "nombre_o_apodo" es solo CONTEXTO: normalmente NO debe aparecer dentro de la chapa.
+- La chapa es SOLO el remate PELADO (p. ej. "jaula abandonada", "cuatro tuercas"): entrega únicamente el remate, SIN introducción. NUNCA lo enmarques con fórmulas como "A ... le dicen", "Le dicen", "Le decían", "Lo/La conocen como".
+- NUNCA menciones a "Melcochita" dentro de la chapa: Melcochita es quien la dice, jamás el objeto de la burla. La chapa es SIEMPRE sobre la víctima (el usuario), no sobre Melcochita.
 - Si existe una característica física, PRIORIZA esa señal como disparador. Usa costumbre u objeto sobre todo cuando aporten un remate mucho mejor.\n- Usa NORMALMENTE UNA sola señal principal como disparador (no concatenes las tres).
 - Cada candidato debe usar la operación que se le asigna explícitamente en el input (campo \
 "operacion_asignada" de cada slot) — es una instrucción OBLIGATORIA, no una sugerencia.
@@ -558,6 +587,9 @@ def filtrar_seguridad(candidatos, textos_corpus_gold):
         if alertas:
             motivos.append(f"contiene palabra(s) de alerta heredadas: {alertas}")
 
+        if re.search(r"\bmelcochita\b", c["chapa"], flags=re.IGNORECASE):
+            motivos.append("menciona a Melcochita (la chapa debe ser sobre la victima, no sobre Melcochita)")
+
         reglas = detectar_reglas_exclusion(c["chapa"], ambito="salida")
         if reglas:
             motivos.append(
@@ -674,6 +706,7 @@ def generar_para_perfil(client, repertorio, textos_corpus_gold, nombre, caracter
         parsed = json.loads(completion.choices[0].message.content)
         nuevos = parsed.get("candidatos", [])
         for c in nuevos:
+            c["chapa"] = _limpiar_chapa(c.get("chapa", ""))
             c["score_estilo_original"] = calcular_score_estilo_original(c, caracteristica_disponible=bool(caracteristica.strip()))
         todos_candidatos.extend(nuevos)
 
