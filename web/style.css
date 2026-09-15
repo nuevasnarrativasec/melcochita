@@ -254,7 +254,7 @@ button:disabled {
 
 /* Chapa (título grande, blanco) */
 #tarjeta-resultado .texto-chapa {
-  color: #fff;
+  color: #f5e40f;
   font: 4rem/1.05 'LiquidAmber';
   letter-spacing: 0.01em;
   margin: 4px 0 2px;
@@ -279,13 +279,14 @@ button:disabled {
   justify-content: center;
 }
   #tarjeta-resultado .btn-audio {
+    border: 1px solid #fff;
     align-items: center;
-    background: #F5E30D;
+    background: #000;
     border-radius: 40px;
-    color: #111;
+    color: #fff;
     display: flex;
     flex: 1 1 190px;
-    font: 1.3rem/1 'LiquidAmber';
+    font: 1.2rem/1 'LiquidAmber';
     gap: 8px;
     justify-content: center;
     margin: 0;
@@ -306,7 +307,7 @@ button:disabled {
     .btn-audio .ico-svg {
       fill: none;
       height: 18px;
-      stroke: currentColor;
+      stroke: #fff;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 2;
