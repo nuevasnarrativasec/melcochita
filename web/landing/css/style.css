@@ -132,7 +132,7 @@ body {
             }
 
     .box-cta{
-        bottom: 35px;
+        bottom: 10px;
         color: #fff;
         font: 1rem/1.1 'Isidora Sans Semibold';
         position: absolute;
@@ -603,7 +603,7 @@ body {
                 padding: 55px 0;
                 text-align: center;
                 margin: 0 auto;
-                max-width: 300px;
+                max-width: 400px;
                 margin-top: -60px;
             }
 
@@ -910,6 +910,8 @@ body {
             }
         img.ilus-no-vuelvas{
             max-width: 500px;
+            position: relative;
+            z-index: 50;
 
             animation: pulse 2s infinite;
         }

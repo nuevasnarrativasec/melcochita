@@ -255,7 +255,7 @@ button:disabled {
 /* Chapa (título grande, blanco) */
 #tarjeta-resultado .texto-chapa {
   color: #fff;
-  font: 2.6rem/1.05 'LiquidAmber';
+  font: 4rem/1.05 'LiquidAmber';
   letter-spacing: 0.01em;
   margin: 4px 0 2px;
   text-align: center;
