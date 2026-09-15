@@ -8,6 +8,7 @@ const mensajeValidacion = document.getElementById("mensaje-validacion");
 
 const estadoCargando = document.getElementById("estado-cargando");
 const textoCargando = document.getElementById("texto-cargando");
+const barraCargaFill = document.getElementById("barra-carga-fill");
 const tarjetaResultado = document.getElementById("tarjeta-resultado");
 const tarjetaError = document.getElementById("tarjeta-error");
 const textoChapa = document.getElementById("texto-chapa");
@@ -163,6 +164,30 @@ async function reproducirChapa(texto) {
   if (url) await _reproducir(url);
 }
 
+// --- Barra de progreso de generación ---
+// Avanza de forma estimada hacia ~92% mientras el motor genera (tiempo
+// variable) y salta a 100% cuando la chapa está lista.
+function iniciarBarraCarga() {
+  if (!barraCargaFill) return;
+  barraCargaFill.style.transition = "none";
+  barraCargaFill.style.width = "0%";
+  void barraCargaFill.offsetWidth; // fuerza reflow para partir desde 0
+  barraCargaFill.style.transition = "width 14s cubic-bezier(.15,.85,.25,1)";
+  barraCargaFill.style.width = "92%";
+}
+
+function completarBarraCarga() {
+  if (!barraCargaFill) return;
+  barraCargaFill.style.transition = "width .35s ease";
+  barraCargaFill.style.width = "100%";
+}
+
+function reiniciarBarraCarga() {
+  if (!barraCargaFill) return;
+  barraCargaFill.style.transition = "none";
+  barraCargaFill.style.width = "0%";
+}
+
 function mostrarSolo(el) {
   [form, estadoCargando, tarjetaResultado, tarjetaError].forEach((e) => e.classList.add("oculto"));
   el.classList.remove("oculto");
@@ -202,6 +227,7 @@ async function solicitarChapa(datos, origen) {
   if (enVuelo) return;
   enVuelo = true;
   mostrarSolo(estadoCargando);
+  iniciarBarraCarga();
   iniciarMensajesCarga(); // fire-and-forget: primer audio en-gesto (desbloquea iOS)
 
   try {
@@ -218,6 +244,7 @@ async function solicitarChapa(datos, origen) {
 
     const data = await respuesta.json();
 
+    completarBarraCarga();
     detenerMensajesCarga();
     textoCargando.textContent = MENSAJE_REVELACION;
     secuenciaRevelacion(data.chapa); // fire-and-forget: "¡Ya salió!" → intro → chapa
@@ -228,6 +255,7 @@ async function solicitarChapa(datos, origen) {
     reiniciarFeedbackUI();
     mostrarSolo(tarjetaResultado);
   } catch (err) {
+    reiniciarBarraCarga();
     detenerMensajesCarga();
     mostrarSolo(tarjetaError);
   } finally {
