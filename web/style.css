@@ -365,21 +365,28 @@ button:disabled {
   text-align: center;
 }
 
-/* Botón blanco principal */
+/* Botón principal amarillo con sombra roja 3D */
 #tarjeta-resultado .btn-otra-victima {
-  background: #fff;
+  background: #F5E30D;
   border-radius: 40px;
   color: #111;
   font: 1.3rem/1 'LiquidAmber';
-  margin: 8px auto 0;
+  margin: 12px auto 0;
   max-width: 360px;
   padding: 17px 24px;
   text-transform: uppercase;
   width: 100%;
+  box-shadow: 0 7px 0 0 #e4002b;
+  transition: transform .1s ease, box-shadow .1s ease, filter .15s ease;
 }
   #tarjeta-resultado .btn-otra-victima:hover:not(:disabled) {
-    background: #f1f1f1;
+    filter: brightness(1.03);
     transform: translateY(-1px);
+    box-shadow: 0 8px 0 0 #e4002b;
+  }
+  #tarjeta-resultado .btn-otra-victima:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 3px 0 0 #e4002b;
   }
 
 /* "Otra chapa" (mismo pata): secundario sutil */
@@ -396,6 +403,50 @@ button:disabled {
   display: none;
 }
   #tarjeta-resultado .btn-otra-chapa-link:hover:not(:disabled) { color: #F5E30D; }
+
+/* ===== Rediseño tarjeta de resultado ===== */
+#tarjeta-resultado .etiqueta-resultado {
+  display: block;
+  color: #fff;
+  font: 1.05rem/1 'LiquidAmber';
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* Separadores con líneas: "Otras acciones", "¿Te gustó?" */
+.divisor-seccion {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #fff;
+  font: 1rem/1 'LiquidAmber';
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 2px 0;
+}
+  .divisor-seccion::before,
+  .divisor-seccion::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+/* Feedback en círculos de color */
+#tarjeta-resultado .btn-feedback {
+  align-items: center;
+  background: #5fd63f;
+  border-radius: 50%;
+  display: flex;
+  font-size: 1.9rem;
+  height: 62px;
+  justify-content: center;
+  padding: 0;
+  width: 62px;
+}
+  #tarjeta-resultado #btn-me-gusta { background: #5fd63f; }
+  #tarjeta-resultado #btn-no-me-gusta { background: #e8306e; }
 
 .tarjeta.error {
   border: 1px solid #c0392b;
