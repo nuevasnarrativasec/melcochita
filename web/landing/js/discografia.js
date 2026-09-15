@@ -215,11 +215,16 @@
     if (dragMoved) { e.preventDefault(); e.stopPropagation(); }
   }, true);
 
-  // Rueda del mouse -> scroll horizontal
+  // Rueda del mouse:
+  // Solo desplazamos el carrusel con gestos HORIZONTALES (trackpad, deltaX).
+  // El gesto VERTICAL se deja pasar SIEMPRE a la pagina, para que el scroll
+  // vertical de la landing no quede atrapado dentro de la discografia.
+  // El carrusel se navega con las flechas, el arrastre (mouse) y el swipe (movil).
   track.addEventListener('wheel', function (e) {
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      track.scrollLeft += e.deltaY;
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      track.scrollLeft += e.deltaX; // gesto horizontal explicito
       e.preventDefault();
     }
+    // gesto vertical: no hacemos nada -> la pagina scrollea normal
   }, { passive: false });
 })();
