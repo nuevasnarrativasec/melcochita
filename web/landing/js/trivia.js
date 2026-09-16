@@ -57,9 +57,9 @@
   ];
 
   var NIVELES = [
-    { min: 0, max: 2, titulo: 'Aprendiz de Melcocha', cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-1.png', desc: 'Conoces al Melcochita que todos hemos visto y escuchado, pero todavía hay bastante por descubrir detrás de sus chapas, su música y sus historias.' },
-    { min: 3, max: 5, titulo: 'Melcocha sonero',      cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-2.png', desc: 'Sabes que Melcochita es mucho más que el cómico de la tele. Entre salsa, rock, chapas y escenarios internacionales, no te agarra tan fácil.' },
-    { min: 6, max: 8, titulo: 'Melcocha Lover',        cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-3.png', desc: 'Lo tuyo ya no es solo "¡No vayan!". Conoces a Pacocha, al sonero, al cómico y hasta esas historias que muchos no tenían en el radar.' }
+    { min: 0, max: 2, titulo: 'Aprendiz de Melcocha', cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-2.png', desc: 'Conoces al Melcochita que todos hemos visto y escuchado, pero todavía hay bastante por descubrir detrás de sus chapas, su música y sus historias.' },
+    { min: 3, max: 5, titulo: 'Melcocha sonero',      cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-3.png', desc: 'Sabes que Melcochita es mucho más que el cómico de la tele. Entre salsa, rock, chapas y escenarios internacionales, no te agarra tan fácil.' },
+    { min: 6, max: 8, titulo: 'Melcocha Lover',        cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-1.png', desc: 'Lo tuyo ya no es solo "¡No vayan!". Conoces a Pacocha, al sonero, al cómico y hasta esas historias que muchos no tenían en el radar.' }
   ];
 
   var LETRAS = ['A', 'B', 'C'];
