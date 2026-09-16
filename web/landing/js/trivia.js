@@ -57,9 +57,9 @@
   ];
 
   var NIVELES = [
-    { min: 0, max: 2, titulo: 'Aprendiz de Melcocha', desc: 'Conoces al Melcochita que todos hemos visto y escuchado, pero todavía hay bastante por descubrir detrás de sus chapas, su música y sus historias.' },
-    { min: 3, max: 5, titulo: 'Melcocha sonero',      desc: 'Sabes que Melcochita es mucho más que el cómico de la tele. Entre salsa, rock, chapas y escenarios internacionales, no te agarra tan fácil.' },
-    { min: 6, max: 8, titulo: 'Melcocha Lover',        desc: 'Lo tuyo ya no es solo "¡No vayan!". Conoces a Pacocha, al sonero, al cómico y hasta esas historias que muchos no tenían en el radar.' }
+    { min: 0, max: 2, titulo: 'Aprendiz de Melcocha', cara: './img/cara-resultado-1.png', desc: 'Conoces al Melcochita que todos hemos visto y escuchado, pero todavía hay bastante por descubrir detrás de sus chapas, su música y sus historias.' },
+    { min: 3, max: 5, titulo: 'Melcocha sonero',      cara: './img/cara-resultado-2.png', desc: 'Sabes que Melcochita es mucho más que el cómico de la tele. Entre salsa, rock, chapas y escenarios internacionales, no te agarra tan fácil.' },
+    { min: 6, max: 8, titulo: 'Melcocha Lover',        cara: './img/cara-resultado-3.png', desc: 'Lo tuyo ya no es solo "¡No vayan!". Conoces a Pacocha, al sonero, al cómico y hasta esas historias que muchos no tenían en el radar.' }
   ];
 
   var LETRAS = ['A', 'B', 'C'];
@@ -133,7 +133,7 @@
     cont.innerHTML =
       '<div class="trivia-card result">' +
         '<span class="tc-corner tc-tr"></span><span class="tc-corner tc-bl"></span>' +
-        '<img class="tc-face" src="./img/cara-resultado-1.png" alt="Melcochita">' +
+        '<img class="tc-face" src="' + n.cara + '" alt="Melcochita">' +
         '<p class="tc-eres">Eres un</p>' +
         '<h3 class="tc-title">' + esc(n.titulo) + '</h3>' +
         '<p class="tc-desc">' + esc(n.desc) + '</p>' +
