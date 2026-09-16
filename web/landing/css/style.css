@@ -67,6 +67,7 @@ body {
 
 .hero{
     height: 100vh;
+    position: relative;
 }
     .hero video{
         object-fit: cover;
@@ -132,7 +133,7 @@ body {
             }
 
     .box-cta{
-        bottom: 10px;
+        bottom: 35px;
         color: #fff;
         font: 1rem/1.1 'Isidora Sans Semibold';
         position: absolute;
@@ -203,6 +204,27 @@ body {
         }
             .intro-close:hover{ color: #ffee01; }
 
+    .box-bajada{
+        background: #270539;
+        height: 400px;
+        width: 100%;
+        clip-path: polygon(0 13%, 100% 0, 100% 100%, 0 80%);
+        position: relative;
+        z-index: 10;
+        margin-top: -55px;
+    }
+        .box-bajada p{
+            color: #fff;
+            font: 1.3rem / 1.5 'Isidora Sans Bold';
+            margin: 0 auto;
+            max-width: 870px;
+            padding: 90px 0;
+            text-align: center;
+        }
+            .box-bajada p span{
+                color: #ffee01;
+            }
+
     /* ===== Botón rojo flotante (fuera del hero) ===== */
     .btn-flotante-rojo{
         animation: portadaPulse 1.05s ease-in-out infinite;
@@ -260,6 +282,9 @@ body {
             list-style-type: none;
             text-align: center;
         }
+        .conoce-carousel{ position: relative; }
+        .conoce-hint,
+        .conoce-arrow{ display: none; }
             .ctn-conoce ul li{
                 color: #fff;
                 display: inline-block;
@@ -518,7 +543,7 @@ body {
     background: url('../img/bg-melcochometro.jpg') no-repeat center top;
     background-size: cover;
     overflow: hidden;
-    margin-top: -170px;
+    margin-top: -90px;
     padding: 80px 0 135px;
     position: relative;
 }
@@ -1113,4 +1138,279 @@ body {
     .main-footer{ clip-path: polygon(0 46px, 100% 0, 100% 100%, 0 100%); margin-top: -46px; padding: 90px 20px 50px; }
     .footer-logo{ font-size: 2.4rem; margin-bottom: 28px; }
     .footer-creditos p{ font-size: 1rem; }
+}
+
+#heroVideo,
+img.ilus-habla-bien,
+img.ilus-1,
+.btn-melcochea-top{
+    display: block;
+}
+#heroVideoMovil,
+.box-sombra-hero-movil,
+img.ilus-habla-bien-movil,
+img.ilus-1-movil,
+.btn-melcochea-bottom{
+    display: none;
+}
+
+@media (max-width: 640px){
+
+    #heroVideo,
+    #btnFlotanteRojo .btn-melcochea-top{
+        display: none;
+    }
+    #heroVideoMovil,
+    #btnFlotanteRojo .btn-melcochea-bottom{
+        display: block;
+    }
+    .btn-flotante-rojo{
+        animation: none;
+        bottom: 0;
+        right: inherit;
+        top: inherit;
+        width: 100%;
+    }
+        .btn-flotante-rojo img{
+            width: 100%;
+        }
+    
+    .box-botones-portada{
+        right: inherit;
+        width: 100%;
+    }
+    #btn-portada-1,
+    #btn-portada-3,
+    img.ilus-habla-bien,
+    img.ilus-1{
+        display: none;
+    }
+    #btn-portada-2{
+        background: url(../img/btn-melcochea-a-tu-pata-aqui-movil.png) no-repeat center center;
+        background-size: 100%;         
+        left: 25%;
+        margin-top: 20px;
+        padding: 15px;       
+        right: inherit;
+        top: 0;        
+        width: 230px;
+    }
+    .hero h1{
+        font-size: 5rem;
+        padding: 25px 10px;
+        z-index: 10;
+    }
+    .box-cta{
+        z-index: 10;
+    }
+    .box-sombra-hero-movil{
+        background: #000000;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 1) 0%, rgba(255, 255, 255, 0) 100%);
+        bottom: 0;
+        display: block;    
+        height: 40%;    
+        position: absolute;
+        width: 100%;
+    }
+    .box-bajada{
+        clip-path: none;
+        margin-top: -1px;
+        height: auto;
+    }
+        .box-bajada p{
+            font: 1.5rem / 1.5 'Isidora Sans Medium';
+            padding: 50px 35px;
+        }
+    .box-btn-apretar{
+        background-color: #e73323;
+        border-bottom-right-radius: 15px;
+        border-top-right-radius: 15px;
+        padding: 10px;
+        position: absolute;
+    }
+        .btn-apretar{
+            position: relative;
+            left: 0;
+            top: 0;
+            width: 90px;
+        }
+        .box-btn-apretar-dos{
+            top: 175px;
+        }   
+        .box-btn-apretar-tres{
+            top: 220px;
+        }  
+        .box-btn-apretar-cuatro{
+            top: 5px;
+        }  
+        .box-btn-apretar-cinco{
+            top: 170px;
+        }  
+    .main-melcochometro{
+        background: url(../img/bg-melcochometro-movil.jpg) no-repeat center top;
+        background-size: cover;
+        overflow: hidden;
+        margin-top: 0;
+        padding: 25px 0 135px;
+        position: relative;
+    }
+        .ctn-melcochometro{
+            padding: 0;
+        }
+        img.ilus-melcochometro{
+            display: none;
+        }
+        img.ilus-melcochometro-movil{
+            display: block;
+        }
+        .box-embed-melcochometro{
+            margin: 0;
+            width: 100%;
+        }
+        .box-embed-melcochometro h4{
+            font: 4rem / 1.2 'LiquidAmber';
+            max-width: 340px;
+            transform: translate(15%, -85%);
+        }
+    .main-habla-bien{
+        background: url('../img/bg-habla-bien-movil.jpg') no-repeat center top;
+        background-size: cover;
+        padding: 60px 0;
+    }
+        .ctn-habla-bien{
+            padding: 0;
+        }
+            .box-main-frases{
+                min-width: inherit;
+                width: 95%;
+            }
+                .frases-card{
+                    margin-top: 0;
+                }
+                img.ilus-habla-bien-movil{
+                    display: block;
+                }
+                    .fp-btn{
+                        font-size: 1.8rem;
+                    }
+                    .frases-q, .frases-sublabel,
+                    .frases-pill{
+                        font-size: 1.8rem;
+                    }
+    .main-conoce{
+        background: url('../img/bg-conoce-movil.jpg') no-repeat center top;
+        background-size: cover;
+        padding: 40px 0 60px;
+    }
+        img.ilus-1-movil{
+            display: block;
+            margin: 0 auto;
+            max-width: 85%;            
+        }
+        .ctn-conoce h3{ font-size: 2.4rem; margin: 26px auto 12px; }
+
+        .conoce-carousel{ position: relative; }
+
+        .conoce-hint{
+            align-items: center;
+            color: #fff;
+            display: flex;
+            font: 1.2rem/1.2 'Isidora Sans Semibold';
+            gap: 8px;
+            justify-content: center;
+            margin: 0 auto 10px;
+        }
+            .conoce-hint-ico{ display: inline-flex; width: 30px; }
+            .conoce-hint-ico img{ display: block; width: 100%; }
+
+        .ctn-conoce ul{
+            display: flex;
+            gap: 0;
+            margin: 0;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+        }
+            .ctn-conoce ul::-webkit-scrollbar{ display: none; }
+            .ctn-conoce ul li{
+                box-sizing: border-box;
+                flex: 0 0 100%;
+                margin: 0;
+                max-width: none;
+                padding: 6px 56px 12px;
+                scroll-snap-align: center;
+            }
+                .ctn-conoce ul li img{ margin: 0 auto 16px; max-width: 120px; }
+                .ctn-conoce ul li h4{ font-size: 1.6rem; }
+                .ctn-conoce ul li p{ font-size: 1.25rem; }
+
+        .conoce-arrow{
+            align-items: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            position: absolute;
+            top: 92px;
+            transform: translateY(-50%);
+            z-index: 5;
+        }
+            .conoce-arrow.prev{ left: 0; }
+            .conoce-arrow.next{ right: 0; }
+            .conoce-arrow svg{
+                fill: none;
+                height: 46px;
+                stroke: #ffee01;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                stroke-width: 3.2;
+                width: 46px;
+            }
+            .conoce-arrow.is-disabled{ opacity: .25; pointer-events: none; }
+    .main-discografia{
+        background: url(../img/bg-discografia-movil.jpg) no-repeat center top;
+        background-size: cover;
+    }
+        .ctn-discografia{
+            padding: 50px 20px 0;
+        }
+            .titulo-escucha img {
+                max-width: 332px;
+                width: 90%;
+            }
+            .disco-legend li{
+                font: 1.3rem / 1.2 'Isidora Sans Semibold';
+                gap: 7px;
+            }
+    .main-apura-oye{
+
+    }
+        .trivia{
+            margin-top: 140px;
+        }
+            .tc-progress{
+                font-size: 1.8rem;
+            }
+            .tc-question{
+                font-size: 2rem;
+            }
+            .tc-opt,
+            .tc-explain{
+                font-size: 1.3rem;
+            }
+    .footer-creditos{
+
+    }
+        .footer-creditos p{
+
+        }
+            .footer-creditos p span{
+                display: block;
+            }
+
 }
