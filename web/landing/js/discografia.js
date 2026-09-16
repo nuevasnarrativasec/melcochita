@@ -25,49 +25,49 @@
       spotify: 'spotify:album:1ywBoxqGjaqWWQVaHD1LbY'
     },*/
     {
-      cover: './img/portada-disco-1.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-1.png',
       titulo: '“Acabo con Lima, huyo pa’ New York” (1969)',
       descripcion: 'Grabado junto a Karamanduka para Fania Records, este LP conecta directamente a Melcochita con la industria salsera internacional y con una etapa clave de su carrera fuera del Perú.',
       spotify: 'spotify:album:1ywBoxqGjaqWWQVaHD1LbY'
     },
     {
-      cover: './img/portada-disco-2.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-2.png',
       titulo: '“Picardías de Melcochita” (1976)',
       descripcion: 'Un título ligado a la personalidad irreverente y popular que acompañó siempre a Melcochita. El disco forma parte de una discografía que combina sabor, humor y tradición salsera.',
       spotify: 'spotify:album:4fbLCjbjWTZLa0NFtaGUK9'
     },
     {
-      cover: './img/portada-disco-3.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-3.png',
       titulo: '“A comer lechón” (1986)',
       descripcion: 'Otro de los títulos registrados en su discografía. Refleja el tono festivo asociado a Melcochita y su vínculo con una salsa pensada para el baile, la calle y la celebración popular.',
       spotify: 'spotify:album:6FCwtnOjb6AcK6M08VvuEb'
     },
     {
-      cover: './img/portada-disco-4.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-4.png',
       titulo: '“La estrella del son” (1989)',
       descripcion: 'Grabado junto a Johnny Pacheco, es uno de los trabajos que mejor conecta a Melcochita con las grandes figuras de la salsa internacional y confirma su reconocimiento como sonero.',
       spotify: 'spotify:album:2ztdZWGohlS94pQAv8wGZh'
     },
     {
-      cover: './img/portada-disco-5.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-5.png',
       titulo: '“Con sabor a pueblo” (1986)',
       descripcion: 'Un disco cuyo título resume una de las marcas de su carrera musical: una salsa cercana, popular y conectada con la calle, el humor y las experiencias cotidianas de su público.',
       spotify: 'spotify:album:1A71noWxYqcFnSMbLMDCid'
     },
     {
-      cover: './img/portada-disco-6.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-6.png',
       titulo: '“El muerto se fue de rumba” (1987)',
       descripcion: 'El título condensa la picardía que atraviesa buena parte de la obra de Melcochita. Forma parte de sus registros salseros y de una carrera musical sostenida durante décadas.',
       spotify: 'spotify:album:3YKIQvIj5E5tBF3SLEPUfM'
     },
     {
-      cover: './img/portada-disco-7.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-7.png',
       titulo: '“Mis mejores éxitos” (1997)',
       descripcion: 'Una recopilación de temas representativos de su trayectoria musical. Permite recorrer la faceta de Melcochita como cantante y sonero, muchas veces eclipsada por su fama como humorista.',
       spotify: 'spotify:album:5GSij9Rfgix7qNL07F7bVV'
     },
     {
-      cover: './img/portada-disco-8.png',
+      cover: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/portada-disco-8.png',
       titulo: '“El sonero llegó” (2025)',
       descripcion: 'Tras 25 años sin grabar un disco de estudio, regresó con este álbum de 12 canciones. Reinterpreta clásicos de la salsa y busca acercar ese repertorio a nuevas generaciones.',
       spotify: 'spotify:album:213wsPsOqDJoPmTG2BgJeu'
