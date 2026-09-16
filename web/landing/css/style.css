@@ -1175,7 +1175,7 @@ img.btn-melcochea-bottom,
         animation: none;
         bottom: 0;
         right: inherit;
-        top: inherit;
+        top: inherit !important;
         width: 100%;
     }
         .btn-flotante-rojo img{
