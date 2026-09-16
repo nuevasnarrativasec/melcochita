@@ -22,12 +22,12 @@
     },
     {
       q: 'Melcochita empezó con la música desde niño. ¿Sabes qué grupo integró cuando tenía seis años?',
-      o: ['Son Cubillas', 'Son de Aruba', 'Mag Peruvian All Stars'], c: 1,
-      e: 'Su relación con la música empezó desde niño: a los seis años integró Son de Aruba. Más adelante formaría Son Cubillas junto a sus hermanos.'
+      o: 'Su relación con la música empezó desde niño: a los seis años integró Son de Aruba. Más adelante formaría Son Cubillas junto a sus hermanos.', c: 2,
+      e: ['Son Cubillas', 'Son de Aruba', 'Mag Peruvian All Stars']
     },
     {
-      q: 'Melcochita dejó su huella en el rock peruano. ¿En cuál de estos discos participó tocando percusión?',
-      o: ['Picardías de Melcochita', 'Virgin de Traffic Sound', 'La estrella del son'], c: 1,
+      q: ['Picardías de Melcochita', 'Virgin de Traffic Sound', 'La estrella del son'],
+      o: 'Melcochita dejó su huella en el rock peruano. ¿En cuál de estos discos participó tocando percusión?', c: 0,
       e: 'En 1969 participó en Virgin, el primer disco de Traffic Sound, aportando en la percusión con las congas de la emblemática canción "Meshkalina".'
     },
     {
@@ -51,15 +51,15 @@
     },
     {
       q: 'A sus 90 años, ¿qué sueño como sonero sigue pendiente?',
-      o: ['Grabar un disco con Willie Colón', 'Dar un espectáculo en el Gran Teatro Nacional', 'Volver a cantar en Nueva York'], c: 1,
-      e: 'Después de décadas de carrera, Melcochita ha dicho que todavía quiere presentarse como sonero en el Gran Teatro Nacional.'
+      o: 'Después de décadas de carrera, Melcochita ha dicho que todavía quiere presentarse como sonero en el Gran Teatro Nacional.', c: 2,
+      e: ['Grabar un disco con Willie Colón', 'Dar un espectáculo en el Gran Teatro Nacional', 'Volver a cantar en Nueva York']
     }
   ];
 
   var NIVELES = [
-    { min: 0, max: 2, titulo: 'Aprendiz de Melcocha', cara: './img/cara-resultado-1.png', desc: 'Conoces al Melcochita que todos hemos visto y escuchado, pero todavía hay bastante por descubrir detrás de sus chapas, su música y sus historias.' },
-    { min: 3, max: 5, titulo: 'Melcocha sonero',      cara: './img/cara-resultado-2.png', desc: 'Sabes que Melcochita es mucho más que el cómico de la tele. Entre salsa, rock, chapas y escenarios internacionales, no te agarra tan fácil.' },
-    { min: 6, max: 8, titulo: 'Melcocha Lover',        cara: './img/cara-resultado-3.png', desc: 'Lo tuyo ya no es solo "¡No vayan!". Conoces a Pacocha, al sonero, al cómico y hasta esas historias que muchos no tenían en el radar.' }
+    { min: 0, max: 2, titulo: 'Aprendiz de Melcocha', cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-1.png', desc: 'Conoces al Melcochita que todos hemos visto y escuchado, pero todavía hay bastante por descubrir detrás de sus chapas, su música y sus historias.' },
+    { min: 3, max: 5, titulo: 'Melcocha sonero',      cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-2.png', desc: 'Sabes que Melcochita es mucho más que el cómico de la tele. Entre salsa, rock, chapas y escenarios internacionales, no te agarra tan fácil.' },
+    { min: 6, max: 8, titulo: 'Melcocha Lover',        cara: 'https://nuevasnarrativasec.github.io/melcochita/web/landing/img/cara-resultado-3.png', desc: 'Lo tuyo ya no es solo "¡No vayan!". Conoces a Pacocha, al sonero, al cómico y hasta esas historias que muchos no tenían en el radar.' }
   ];
 
   var LETRAS = ['A', 'B', 'C'];
