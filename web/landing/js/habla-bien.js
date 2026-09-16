@@ -12,7 +12,7 @@
   /* ---------- CONFIG ----------
      Para agregar audios: suéltalos en la subcarpeta y añade el
      nombre del archivo a la lista "files" correspondiente. */
-  var BASE = './audio/';
+  var BASE = 'https://nuevasnarrativasec.github.io/melcochita/web/landing/audio/';
   var DATA = {
     frases: {
       label: 'Frases',
