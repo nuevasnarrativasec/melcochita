@@ -1247,7 +1247,7 @@ img.btn-melcochea-bottom,
             top: 5px;
         }  
         .box-btn-apretar-cinco{
-            top: 170px;
+            top: 200px;
         }  
     .main-melcochometro{
         background: url(../img/bg-melcochometro-movil.jpg) no-repeat center top;
@@ -1273,8 +1273,12 @@ img.btn-melcochea-bottom,
         .box-embed-melcochometro h4{
             font: 4rem / 1.2 'LiquidAmber';
             max-width: 340px;
-            transform: translate(15%, -85%);
+            transform: translate(10%, -85%);
         }
+    .disco-cover img{
+        height: 80%;
+        width: 80%;
+    }
     .main-habla-bien{
         background: url('../img/bg-habla-bien-movil.jpg') no-repeat center top;
         background-size: cover;
@@ -1287,8 +1291,13 @@ img.btn-melcochea-bottom,
                 min-width: inherit;
                 width: 95%;
             }
+                .box-main-frases h4{
+                    margin-bottom: 60px;
+                }
                 .frases-card{
-                    margin-top: 0;
+                    margin-top: -30px;
+                    position: relative;
+                    z-index: 10;
                 }
                 img.ilus-habla-bien-movil{
                     display: block;
@@ -1387,14 +1396,24 @@ img.btn-melcochea-bottom,
                 width: 90%;
             }
             .disco-legend li{
-                font: 1.3rem / 1.2 'Isidora Sans Semibold';
+                font: 1.1rem / 1.2 'Isidora Sans Semibold';
                 gap: 7px;
             }
     .main-apura-oye{
-
-    }
+        padding-top: 40px;
+    }   
+        .ctn-apura-oye h2{
+            font-size: 2rem;
+            max-width: 300px;
+        }
+        .ctn-apura-oye h2.no-vuelvas{
+            max-width: 350px;
+        }
         .trivia{
             margin-top: 140px;
+        }
+        .trivia-card{
+            min-height: 760px;
         }
             .tc-progress{
                 font-size: 1.8rem;
