@@ -1293,6 +1293,7 @@ img.btn-melcochea-bottom,
             }
                 .box-main-frases h4{
                     margin-bottom: 60px;
+                    max-width: 350px;
                 }
                 .frases-card{
                     margin-top: -30px;
