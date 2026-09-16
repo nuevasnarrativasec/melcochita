@@ -249,7 +249,7 @@ body {
 .main-conoce{
     background: url('../img/bg-conoce.jpg') no-repeat center top;
     background-size: cover;
-    padding: 80px 0;
+    padding: 120px 0;
     position: relative;
 }
     .ctn-conoce{
@@ -1141,16 +1141,19 @@ body {
 }
 
 #heroVideo,
-img.ilus-habla-bien,
 img.ilus-1,
 .btn-melcochea-top{
     display: block;
+}
+img.ilus-habla-bien{
+    display: inline-block;
 }
 #heroVideoMovil,
 .box-sombra-hero-movil,
 img.ilus-habla-bien-movil,
 img.ilus-1-movil,
-.btn-melcochea-bottom{
+img.btn-melcochea-bottom,
+.ilus-melcochometro-movil{
     display: none;
 }
 
