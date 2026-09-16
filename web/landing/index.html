@@ -35,7 +35,9 @@
             <i></i>
         </div>
         <!--<img src="./img/btn-audio.png" alt="activa audio" class="btn-audio" width="100%">-->
+        <div class="box-sombra-hero-movil"></div>
         <video src="./video/video-portada.mp4" id="heroVideo" autoplay muted playsinline width="100%" height="100%"></video>
+        <video src="./video/video-portada-movil.mp4" id="heroVideoMovil" autoplay muted playsinline width="100%" height="100%"></video>
     </div>
 
     <div class="box-bajada">
@@ -45,9 +47,12 @@
     </div>
 
     <div class="main-melcochometro" id="melcochometro">
-        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="2" alt="No lo aprietes" role="button" tabindex="0">
+        <div class="box-btn-apretar">
+            <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="2" alt="No lo aprietes" role="button" tabindex="0">
+        </div>        
         <div class="ctn-melcochometro">
             <img src="../landing/img/ilus-melcochometro.png" alt="melcochita" width="100%" class="ilus-melcochometro">
+            <img src="../landing/img/ilus-melcochometro-movil.png" alt="melcochita" width="100%" class="ilus-melcochometro-movil">
             
             <div class="box-embed-melcochometro">
                 <div class="box-titulo-melcochea">
@@ -64,11 +69,14 @@
     </div>
 
     <div class="main-habla-bien" id="habla-bien">
-        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="3" alt="No lo aprietes" role="button" tabindex="0">
+        <div class="box-btn-apretar box-btn-apretar-dos">
+            <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="3" alt="No lo aprietes" role="button" tabindex="0">
+        </div>        
         <div class="ctn-habla-bien">
             <div class="box-main-frases">
                 <h4>habla bien</h4>
 
+                <img src="../landing/img/ilus-habla-bien-movil.png" alt="melcochita" width="100%" class="ilus-habla-bien-movil">
                 <div class="frases-card">
                     <p class="frases-q">¿Qué buscas?</p>
 
@@ -103,16 +111,23 @@
     </div>
 
      <div class="main-conoce" id="conoce">
-        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="0" alt="No lo aprietes" role="button" tabindex="0">
+        <div class="box-btn-apretar box-btn-apretar-tres">
+            <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="0" alt="No lo aprietes" role="button" tabindex="0">
+        </div>        
         <div class="ctn-conoce">
             <img src="./img/ilus-90-anos.png" alt="90 años" width="100%" class="ilus-1">
-            <p>
+            <img src="./img/ilus-90-anos-movil.png" alt="90 años" width="100%" class="ilus-1-movil">
+            <!--<p>
                 A lo largo de más de ocho décadas de carrera, <span>Pablo Villanueva “Melcochita”</span> ha hecho de la versatilidad su sello. Música, humor, televisión y cine forman parte de una trayectoria marcada por una personalidad inconfundible, una extraordinaria capacidad para improvisar y un talento que convirtió su picardía, sus frases y sus chapas en parte de la memoria popular peruana. Su nombre, además, trascendió fronteras y llegó a escenarios internacionales.
-            </p>
+            </p>-->
             <h3>
                 conoce a pablo villanueva
             </h3>
-            <ul>
+            <div class="conoce-carousel">
+                <p class="conoce-hint"><span class="conoce-hint-ico"><img src="./img/icon-deslizar.png" alt=""></span> Desliza para interactuar</p>
+                <button class="conoce-arrow prev" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8"/></svg></button>
+                <button class="conoce-arrow next" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8"/></svg></button>
+                <ul>
                 <li>
                     <img src="../landing/img/icon-conoce-1.png" alt="" width="100%">
                     <h4>Música desde niño</h4>
@@ -135,11 +150,14 @@
                     </p>
                 </li>
             </ul>
+            </div>
         </div>
     </div> 
 
     <div class="main-discografia" id="discografia">
-        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="1" alt="No lo aprietes" role="button" tabindex="0">
+        <div class="box-btn-apretar box-btn-apretar-cuatro">
+             <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="1" alt="No lo aprietes" role="button" tabindex="0">
+        </div>       
         <div class="ctn-discografia">
 
             <h2 class="titulo-escucha">
@@ -177,7 +195,9 @@
     </div>
 
     <div class="main-apura-oye">
-        <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="4" alt="No lo aprietes" role="button" tabindex="0">
+        <div class="box-btn-apretar box-btn-apretar-cinco">
+            <img src="./img/btn-apretar.png" class="btn-apretar" data-dato="4" alt="No lo aprietes" role="button" tabindex="0">
+        </div>        
         <div class="ctn-apura-oye">
             <h2>
                 apura oye
@@ -231,12 +251,14 @@
     </div>
 
     <a class="btn-flotante-rojo" id="btnFlotanteRojo" href="#melcochometro" aria-label="Melcochea a tu pata">
-        <img src="./img/btn-melcochea-a-tu-pata-aqui.png" alt="Melcochea a tu pata">
+        <img src="./img/btn-melcochea-a-tu-pata-aqui.png" alt="Melcochea a tu pata" class="btn-melcochea-top">
+        <img src="./img/btn-melcochea-a-tu-pata-aqui-bottom.png" alt="Melcochea a tu pata" class="btn-melcochea-bottom">
     </a>
 
     <script src="./js/dato.js" defer></script>
     <script src="./js/trivia.js" defer></script>
     <script src="./js/hero.js" defer></script>
+    <script src="./js/conoce.js" defer></script>
     <script src="./js/habla-bien.js" defer></script>
     <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
     <script src="./js/discografia.js" defer></script>

@@ -1,45 +1,74 @@
 /* ============================================================
    HERO — Intro de audio, reproducción del video y botón flotante
-   - Overlay "Activa tu audio" al cargar: botón de audio (activa y
-     reproduce desde el inicio) + botón cerrar.
+   - Dos videos: #heroVideo (desktop) y #heroVideoMovil (móvil). El CSS
+     muestra uno u otro según el breakpoint (640px). El audio se aplica
+     SIEMPRE al video ACTIVO; el inactivo queda mute y en pausa, así nunca
+     suenan los dos a la vez. Al cambiar de breakpoint, el audio se
+     transfiere al nuevo video activo sin reiniciar.
+   - Overlay "Activa tu audio" al cargar: botón (activa y reproduce desde
+     el inicio) + botón cerrar.
    - btn-audio (esquina) alterna audio on/off.
    - El video se pausa al salir del hero y se reanuda al volver.
-   - El botón rojo "melcochea a tu pata" aparece fijo arriba-derecha
-     cuando se sale del hero y acompaña toda la landing.
+   - El botón rojo "melcochea a tu pata" aparece fijo cuando se sale del hero.
    ============================================================ */
 (function () {
   'use strict';
 
-  var video = document.getElementById('heroVideo');
-  if (!video) return;
+  var video      = document.getElementById('heroVideo');      // desktop
+  var videoMovil = document.getElementById('heroVideoMovil');  // móvil
+  var videos = [video, videoMovil].filter(Boolean);
+  if (!videos.length) return;
 
   var cornerBtn = document.querySelector('.btn-audio');
-  var hero      = document.querySelector('.hero') || video;
+  var hero      = document.querySelector('.hero') || videos[0];
   var intro     = document.getElementById('introAudio');
   var introBtn  = document.getElementById('introAudioBtn');
   var introX    = document.getElementById('introClose');
   var floatBtn  = document.getElementById('btnFlotanteRojo');
 
+  // Breakpoint que decide qué video se ve (coincide con el CSS: 640px).
+  var mqMovil = window.matchMedia('(max-width: 640px)');
+
   var userPaused = false;
+  var audioOn = false; // estado global; se conserva al cambiar de video
 
-  function safePlay() {
-    var p = video.play();
-    if (p && p.catch) p.catch(function () {});
+  // Video ACTIVO según el viewport.
+  function videoActivo() {
+    return (mqMovil.matches && videoMovil) ? videoMovil : (video || videoMovil);
   }
 
-  // Estado de audio centralizado (video + botón de esquina)
-  function setAudio(on, restart) {
-    video.muted = !on;
-    if (on) {
-      if (restart) video.currentTime = 0;
-      userPaused = false;
-      safePlay();
-    }
+  function playEl(v) { if (!v) return; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  function safePlay() { playEl(videoActivo()); }
+
+  // Aplica el estado de audio al video activo; el resto queda mute + en pausa.
+  function aplicarAudio(restart) {
+    var act = videoActivo();
+    videos.forEach(function (v) {
+      if (v === act) {
+        v.muted = !audioOn;
+        if (audioOn && restart) v.currentTime = 0;
+        playEl(v);
+      } else {
+        v.muted = true;
+        try { v.pause(); } catch (e) {}
+      }
+    });
     if (cornerBtn) {
-      cornerBtn.classList.toggle('is-audio-on', on);
-      cornerBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      cornerBtn.classList.toggle('is-audio-on', audioOn);
+      cornerBtn.setAttribute('aria-pressed', audioOn ? 'true' : 'false');
     }
   }
+
+  function setAudio(on, restart) {
+    audioOn = on;
+    if (on) userPaused = false;
+    aplicarAudio(restart);
+  }
+
+  // Al cambiar de breakpoint, transfiere el audio al nuevo video activo.
+  var onMqChange = function () { aplicarAudio(false); };
+  if (mqMovil.addEventListener) mqMovil.addEventListener('change', onMqChange);
+  else if (mqMovil.addListener) mqMovil.addListener(onMqChange);
 
   /* ---------- 1. Overlay de intro ---------- */
   function cerrarIntro() { if (intro) intro.classList.add('is-hidden'); }
@@ -59,7 +88,7 @@
     cornerBtn.setAttribute('role', 'button');
     cornerBtn.setAttribute('tabindex', '0');
     cornerBtn.setAttribute('aria-pressed', 'false');
-    var toggle = function () { setAudio(video.muted, video.muted); };
+    var toggle = function () { setAudio(!audioOn, !audioOn); };
     cornerBtn.addEventListener('click', toggle);
     cornerBtn.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
@@ -69,7 +98,7 @@
   /* ---------- 3. Viewport: pausar video + botón flotante ---------- */
   function fueraDelHero(fuera) {
     if (fuera) {
-      video.pause();
+      videos.forEach(function (v) { try { v.pause(); } catch (e) {} });
       if (floatBtn) floatBtn.classList.add('is-visible');
     } else {
       if (!userPaused) safePlay();
@@ -89,4 +118,7 @@
       fueraDelHero(!visible);
     }, { passive: true });
   }
+
+  // Inicial: deja sólo el video activo reproduciéndose (mute), pausa el otro.
+  aplicarAudio(false);
 })();

@@ -370,7 +370,7 @@ button:disabled {
   background: #F5E30D;
   border-radius: 40px;
   color: #111;
-  font: 1.3rem/1 'LiquidAmber';
+  font: 1.8rem/1 'LiquidAmber';
   margin: 12px auto 0;
   max-width: 360px;
   padding: 17px 24px;
@@ -408,7 +408,7 @@ button:disabled {
 #tarjeta-resultado .etiqueta-resultado {
   display: block;
   color: #fff;
-  font: 1.05rem/1 'LiquidAmber';
+  font: 1.5rem/1 'LiquidAmber';
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin: 0;
@@ -420,7 +420,7 @@ button:disabled {
   align-items: center;
   gap: 14px;
   color: #fff;
-  font: 1rem/1 'LiquidAmber';
+  font: 1.5rem/1 'LiquidAmber';
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 2px 0;
