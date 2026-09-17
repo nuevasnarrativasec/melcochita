@@ -114,7 +114,37 @@ def _incrementar_metrica(clave):
         METRICAS_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(METRICAS_PATH, "w", encoding="utf-8") as f:
             json.dump(datos, f, ensure_ascii=False, indent=2)
-        return datos[clave]
+        valor = datos[clave]
+    # Contador PERSISTENTE en Redis (Upstash): sobrevive redeploys y "sleeps"
+    # del plan free, a diferencia del JSON local (disco efímero). Best-effort
+    # y fuera del lock para no bloquear por I/O de red.
+    try:
+        voz.redis_cmd(["HINCRBY", "melco:stats", clave, "1"])
+    except Exception:
+        pass
+    return valor
+
+
+def _metricas_persistentes():
+    """Contadores durables desde Redis (HGETALL melco:stats). {} si no hay Redis."""
+    try:
+        res = voz.redis_cmd(["HGETALL", "melco:stats"])
+    except Exception:
+        res = None
+    datos = {}
+    if isinstance(res, list):  # HGETALL REST -> [campo, valor, campo, valor, ...]
+        for i in range(0, len(res) - 1, 2):
+            try:
+                datos[res[i]] = int(res[i + 1])
+            except (ValueError, TypeError):
+                datos[res[i]] = res[i + 1]
+    elif isinstance(res, dict):
+        for k, v in res.items():
+            try:
+                datos[k] = int(v)
+            except (ValueError, TypeError):
+                datos[k] = v
+    return datos
 
 # --------------------------------------------------------------------------
 # Carga ÚNICA al iniciar el servidor: API key, cliente OpenAI, repertorio,
@@ -369,6 +399,22 @@ def generar_voz(solicitud: SolicitudVoz, request: Request):
         logger.exception("Error generando la voz de Melcochita")
         raise HTTPException(status_code=502, detail="No se pudo generar la voz.")
     return Response(content=audio, media_type="audio/mpeg")
+
+
+@app.get("/metricas")
+def metricas():
+    """Contadores anónimos de uso. La fuente durable es Redis (persistente);
+    el JSON local es respaldo del proceso actual. `chapas_generadas` =
+    generacion_exitosa (total de chapas producidas)."""
+    persistente = _metricas_persistentes()
+    local = _cargar_metricas()
+    total = dict(local)
+    total.update(persistente)  # Redis manda cuando existe
+    for c in _CLAVES_METRICAS:
+        total.setdefault(c, 0)
+    total["chapas_generadas"] = total.get("generacion_exitosa", 0)
+    return {"chapas_generadas": total["chapas_generadas"], "total": total,
+            "persistente": persistente, "local": local}
 
 
 # Audios de las frases de carga (voz de Melcochita), servidos estáticos en
