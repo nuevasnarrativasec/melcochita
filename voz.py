@@ -29,6 +29,7 @@ no haya pasado ese filtro.
 """
 
 import os
+import base64
 import hashlib
 from pathlib import Path
 from typing import Optional
@@ -118,6 +119,77 @@ def _clave_cache(voice_id: str, model_id: str, frase: str) -> str:
     ).hexdigest()[:32]
 
 
+# --- Caché externo persistente (Upstash Redis vía REST) -------------------
+# El disco de Render (plan free) es EFÍMERO: se borra en cada redeploy y cada
+# vez que el servicio despierta de su "sleep" por inactividad. Para que la
+# caché de audios sobreviva —y no se re-gasten créditos de ElevenLabs por
+# chapas repetidas— además del disco local guardamos cada MP3 en Upstash
+# Redis (tier gratis). Todo es best-effort: si Redis no está configurado o
+# falla, la síntesis sigue funcionando exactamente igual.
+_REDIS_PREFIJO = "melco:voz:"
+
+
+def _redis_cfg():
+    url = os.environ.get("UPSTASH_REDIS_REST_URL")
+    tok = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
+    return (url.rstrip("/") if url else None, tok)
+
+
+def _redis_get(clave: str):
+    """MP3 (bytes) guardado en Redis para esa clave, o None."""
+    url, tok = _redis_cfg()
+    if not url or not tok:
+        return None
+    try:
+        r = httpx.post(
+            url,
+            headers={"Authorization": f"Bearer {tok}"},
+            json=["GET", _REDIS_PREFIJO + clave],
+            timeout=5,
+        )
+        if r.status_code >= 300:
+            return None
+        res = r.json().get("result")
+        if not res:
+            return None
+        return base64.b64decode(res)
+    except Exception:
+        return None
+
+
+def _redis_set(clave: str, audio: bytes) -> None:
+    """Guarda el MP3 (base64) en Redis. No interrumpe si falla."""
+    url, tok = _redis_cfg()
+    if not url or not tok:
+        return
+    try:
+        cmd = ["SET", _REDIS_PREFIJO + clave, base64.b64encode(audio).decode("ascii")]
+        try:
+            ttl_dias = int(os.environ.get("VOZ_CACHE_TTL_DIAS", "0") or "0")
+        except ValueError:
+            ttl_dias = 0
+        if ttl_dias > 0:  # 0 = sin expirar
+            cmd += ["EX", str(ttl_dias * 86400)]
+        httpx.post(
+            url,
+            headers={"Authorization": f"Bearer {tok}"},
+            json=cmd,
+            timeout=8,
+        )
+    except Exception:
+        pass
+
+
+def _guardar_local(ruta, audio: bytes) -> None:
+    """Escritura atómica del MP3 en el disco local (caché del proceso)."""
+    try:
+        tmp = ruta.with_suffix(".mp3.tmp")
+        tmp.write_bytes(audio)
+        tmp.replace(ruta)
+    except Exception:
+        pass
+
+
 def sintetizar_chapa(chapa: str, marco: Optional[str] = None) -> bytes:
     """
     Devuelve el MP3 (bytes) de la chapa enmarcada y dicha por Melcochita.
@@ -135,10 +207,20 @@ def sintetizar_chapa(chapa: str, marco: Optional[str] = None) -> bytes:
     # volver al marco sintetizado, poner VOZ_CON_MARCO=true en el .env.
     con_marco = os.environ.get("VOZ_CON_MARCO", "false").lower() in ("1", "true", "yes", "si", "sí")
     frase = enmarcar(chapa, marco) if con_marco else chapa.strip().strip(".!¡ ").strip()
+    clave = _clave_cache(voice_id, model_id, frase)
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    ruta = _CACHE_DIR / f"{_clave_cache(voice_id, model_id, frase)}.mp3"
+    ruta = _CACHE_DIR / f"{clave}.mp3"
+
+    # 1) Caché local (disco del proceso actual).
     if ruta.exists():
         return ruta.read_bytes()
+
+    # 2) Caché externo persistente (Upstash): sobrevive redeploys y el "sleep"
+    #    del plan free. Si está, se sirve sin volver a pagar a ElevenLabs.
+    audio_remoto = _redis_get(clave)
+    if audio_remoto:
+        _guardar_local(ruta, audio_remoto)  # repuebla el disco local
+        return audio_remoto
 
     url = f"{_BASE}/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128"
     try:
@@ -159,8 +241,7 @@ def sintetizar_chapa(chapa: str, marco: Optional[str] = None) -> bytes:
         raise VozError(f"ElevenLabs {r.status_code}: {r.text[:200]}")
 
     audio = r.content
-    # Escritura atómica de la caché.
-    tmp = ruta.with_suffix(".mp3.tmp")
-    tmp.write_bytes(audio)
-    tmp.replace(ruta)
+    # Guarda en ambos cachés: local (rápido) y externo (persistente).
+    _guardar_local(ruta, audio)
+    _redis_set(clave, audio)
     return audio

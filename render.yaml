@@ -27,6 +27,10 @@ services:
         value: "40"
       - key: PROBABILIDAD_CHAPA_ORIGINAL   # motor v3: % de chapas originales (0-1)
         value: "0.30"
+      - key: UPSTASH_REDIS_REST_URL         # caché externo persistente (Upstash Redis)
+        sync: false                         # se pega en el dashboard
+      - key: UPSTASH_REDIS_REST_TOKEN       # token REST de Upstash
+        sync: false
       - key: PYTHON_VERSION
         value: "3.11.9"
     # OPCIONAL (recomendado para el lanzamiento): disco persistente para que
