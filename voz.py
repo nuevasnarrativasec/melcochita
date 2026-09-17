@@ -190,6 +190,30 @@ def _guardar_local(ruta, audio: bytes) -> None:
         pass
 
 
+def redis_cmd(arr, timeout: float = 5):
+    """Ejecuta un comando Redis (como array) vía REST y devuelve su 'result'.
+
+    Best-effort y de uso general (contadores de métricas, etc.): si Redis no
+    está configurado o algo falla, devuelve None y nunca lanza. Reutiliza la
+    misma config de Upstash del caché de voz.
+    """
+    url, tok = _redis_cfg()
+    if not url or not tok:
+        return None
+    try:
+        r = httpx.post(
+            url,
+            headers={"Authorization": f"Bearer {tok}"},
+            json=arr,
+            timeout=timeout,
+        )
+        if r.status_code >= 300:
+            return None
+        return r.json().get("result")
+    except Exception:
+        return None
+
+
 def sintetizar_chapa(chapa: str, marco: Optional[str] = None) -> bytes:
     """
     Devuelve el MP3 (bytes) de la chapa enmarcada y dicha por Melcochita.
