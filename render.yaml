@@ -22,7 +22,7 @@ services:
       - key: MELCOCHITA_VOICE_ID
         value: nd89Nw4NE33rXRB5xGQe
       - key: ELEVEN_MODEL_ID
-        value: eleven_flash_v2_5
+        value: eleven_multilingual_v2
       - key: LIMITE_POR_IP_DIA
         value: "40"
       - key: PROBABILIDAD_CHAPA_ORIGINAL   # motor v3: % de chapas originales (0-1)
