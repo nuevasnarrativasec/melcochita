@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Panel · Melcochómetro</title>
+<style>
+  @font-face{ font-family:'LiquidAmber'; src:url('./fonts/LiquidAmber-Regular.woff2') format('woff2'), url('./fonts/LiquidAmber-Regular.woff') format('woff'); font-display:swap; }
+  @font-face{ font-family:'Isidora Sans Bold'; src:url('./fonts/IsidoraSans-Bold.woff2') format('woff2'); font-display:swap; }
+  @font-face{ font-family:'Isidora Sans Medium'; src:url('./fonts/IsidoraSans-Medium.woff2') format('woff2'); font-display:swap; }
+  @font-face{ font-family:'Isidora Sans Semibold'; src:url('./fonts/IsidoraSans-SemiBold.woff2') format('woff2'); font-display:swap; }
+
+  :root{
+    --bg:#0b0b0b; --card:#141414; --card2:#1b1b1b; --line:#2a2a2a;
+    --amar:#F5E30D; --verde:#5fd63f; --rosa:#e8306e; --txt:#fff; --mut:#9a9a9a;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:'Isidora Sans Medium', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    padding: env(safe-area-inset-top,0) 16px 40px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:960px; margin:0 auto; }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:24px 4px 18px; flex-wrap:wrap;
+  }
+  .title{ font-family:'LiquidAmber'; font-size:2rem; letter-spacing:.02em; text-transform:uppercase; margin:0; }
+  .title small{ color:var(--amar); }
+  .estado{ display:flex; align-items:center; gap:8px; color:var(--mut); font-size:.9rem; }
+  .dot{ width:10px; height:10px; border-radius:50%; background:var(--verde); box-shadow:0 0 0 0 rgba(95,214,63,.6); animation:pulse 1.8s infinite; }
+  .dot.off{ background:#c0392b; animation:none; }
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(95,214,63,.55)} 70%{box-shadow:0 0 0 9px rgba(95,214,63,0)} 100%{box-shadow:0 0 0 0 rgba(95,214,63,0)} }
+
+  /* Hero */
+  .hero{
+    background:linear-gradient(160deg,#191a06,#141414 60%); border:1px solid var(--line);
+    border-radius:20px; padding:34px 26px; text-align:center; margin-bottom:16px;
+  }
+  .hero .label{ color:var(--mut); text-transform:uppercase; letter-spacing:.14em; font-family:'Isidora Sans Semibold'; font-size:.95rem; margin:0 0 6px; }
+  .hero .num{ font-family:'LiquidAmber'; color:var(--amar); font-size:clamp(4.5rem,18vw,9rem); line-height:.95; margin:0; }
+  .hero .sub{ color:var(--mut); font-size:1rem; margin:10px 0 0; }
+  .hero .sub b{ color:#dcdcdc; font-family:'Isidora Sans Bold'; }
+
+  /* Grid de tiles */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .tile{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 18px 16px; }
+  .tile .k{ color:var(--mut); text-transform:uppercase; letter-spacing:.08em; font-size:.78rem; font-family:'Isidora Sans Semibold'; margin:0 0 8px; display:flex; align-items:center; gap:7px; }
+  .tile .v{ font-family:'LiquidAmber'; font-size:2.6rem; line-height:1; margin:0; }
+  .v.amar{ color:var(--amar); } .v.verde{ color:var(--verde); } .v.rosa{ color:var(--rosa); }
+
+  .foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; flex-wrap:wrap; color:var(--mut); font-size:.85rem; }
+  button.refresh{
+    background:var(--amar); color:#111; border:none; border-radius:999px; cursor:pointer;
+    font-family:'Isidora Sans Bold'; font-size:.9rem; padding:10px 18px; text-transform:uppercase;
+  }
+  button.refresh:active{ transform:translateY(1px); }
+  .nota{ color:#6f6f6f; font-size:.78rem; margin-top:14px; line-height:1.5; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="title">Melcochómetro <small>· Panel</small></h1>
+      <div class="estado"><span class="dot" id="dot"></span><span id="estadoTxt">Conectando…</span></div>
+    </header>
+
+    <section class="hero">
+      <p class="label">Chapas generadas</p>
+      <p class="num" id="chapas">—</p>
+      <p class="sub">Costo aprox.: <b id="creditos">—</b> créditos · <b id="usd">—</b> · ~<b id="pct">—</b> del plan</p>
+    </section>
+
+    <div class="grid">
+      <div class="tile"><p class="k">🧠 Nuevas (IA)</p><p class="v amar" id="nuevas">—</p></div>
+      <div class="tile"><p class="k">📼 Originales</p><p class="v amar" id="originales">—</p></div>
+      <div class="tile"><p class="k">↻ "Otra chapa"</p><p class="v" id="otra">—</p></div>
+      <div class="tile"><p class="k">👍 Me gusta</p><p class="v verde" id="fpos">—</p></div>
+      <div class="tile"><p class="k">👎 No me gusta</p><p class="v rosa" id="fneg">—</p></div>
+    </div>
+
+    <div class="foot">
+      <span id="actualizado">—</span>
+      <button class="refresh" id="btnRefresh" type="button">Actualizar</button>
+    </div>
+
+    <p class="nota">
+      Se actualiza solo cada 15&nbsp;s. El conteo es persistente (Upstash Redis) y sobrevive
+      redeploys. El costo es un estimado (≈18 créditos por chapa con el modelo multilingual_v2,
+      plan de 40&nbsp;000 créditos) — el saldo real míralo en el panel de ElevenLabs.
+    </p>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  var CREDITOS_POR_CHAPA = 18;
+  var CREDITOS_PLAN = 40000;
+  var USD_POR_CREDITO = 6 / 40000; // $6 por 40 000 créditos
+
+  var el = function(id){ return document.getElementById(id); };
+  var ultimo = {};      // últimos valores para animar
+  var tsUltimo = null;  // marca de tiempo de la última actualización OK
+
+  function animar(id, destino){
+    var nodo = el(id);
+    var ini = typeof ultimo[id] === "number" ? ultimo[id] : 0;
+    destino = destino || 0;
+    if (ini === destino){ nodo.textContent = destino.toLocaleString("es-PE"); ultimo[id]=destino; return; }
+    var t0 = performance.now(), dur = 550;
+    function paso(t){
+      var p = Math.min(1, (t - t0)/dur);
+      var val = Math.round(ini + (destino - ini) * (1 - Math.pow(1-p,3)));
+      nodo.textContent = val.toLocaleString("es-PE");
+      if (p < 1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+    ultimo[id] = destino;
+  }
+
+  function pintar(d){
+    var t = (d && d.total) ? d.total : {};
+    var chapas = Number(d.chapas_generadas || t.generacion_exitosa || 0);
+    animar("chapas", chapas);
+    animar("nuevas", Number(t.generacion_nueva || 0));
+    animar("originales", Number(t.generacion_original || 0));
+    animar("otra", Number(t.clic_otra_chapa || 0));
+    animar("fpos", Number(t.feedback_positivo || 0));
+    animar("fneg", Number(t.feedback_negativo || 0));
+
+    var cred = chapas * CREDITOS_POR_CHAPA;
+    el("creditos").textContent = cred.toLocaleString("es-PE");
+    el("usd").textContent = "$" + (cred * USD_POR_CREDITO).toFixed(2);
+    el("pct").textContent = ((cred / CREDITOS_PLAN) * 100).toFixed(1) + "%";
+  }
+
+  function ok(online){
+    el("dot").classList.toggle("off", !online);
+    el("estadoTxt").textContent = online ? "En vivo" : "Sin conexión";
+  }
+
+  function cargar(){
+    fetch("/metricas", { cache:"no-store" })
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(d){ pintar(d); tsUltimo = Date.now(); ok(true); })
+      .catch(function(){ ok(false); });
+  }
+
+  function tickReloj(){
+    if (!tsUltimo){ el("actualizado").textContent = ""; return; }
+    var s = Math.round((Date.now() - tsUltimo)/1000);
+    el("actualizado").textContent = s < 5 ? "Actualizado recién" : ("Actualizado hace " + s + " s");
+  }
+
+  el("btnRefresh").addEventListener("click", cargar);
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) cargar(); });
+  cargar();
+  setInterval(cargar, 15000);
+  setInterval(tickReloj, 1000);
+})();
+</script>
+</body>
+</html>
