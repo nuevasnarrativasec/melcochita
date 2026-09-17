@@ -22,11 +22,15 @@ services:
       - key: MELCOCHITA_VOICE_ID
         value: nd89Nw4NE33rXRB5xGQe
       - key: ELEVEN_MODEL_ID
-        value: eleven_flash_v2_5
+        value: eleven_multilingual_v2
       - key: LIMITE_POR_IP_DIA
         value: "40"
       - key: PROBABILIDAD_CHAPA_ORIGINAL   # motor v3: % de chapas originales (0-1)
         value: "0.30"
+      - key: UPSTASH_REDIS_REST_URL         # caché externo persistente (Upstash Redis)
+        sync: false                         # se pega en el dashboard
+      - key: UPSTASH_REDIS_REST_TOKEN       # token REST de Upstash
+        sync: false
       - key: PYTHON_VERSION
         value: "3.11.9"
     # OPCIONAL (recomendado para el lanzamiento): disco persistente para que
